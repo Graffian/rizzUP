@@ -280,7 +280,7 @@ export default function RizzApp() {
             </h1>
             <p className="mt-6 max-w-xl text-[16px] leading-[1.65] text-muted">
               Paste the message. Get a handful of replies that sound like you on a
-              good day — one to tease, one to charm, one to keep short. Built on a free AI.
+              good day — one to tease, one to charm, one to keep short.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-semibold tracking-[0.1em] text-muted/80">
               <span>13 languages</span>
