@@ -130,7 +130,7 @@ body {
     }
   }
   .animate-entrance {
-    animation: entrance 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: entrance 0.705s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .animate-delay-1 {
     animation-delay: 80ms;
@@ -190,15 +190,15 @@ body {
     }
   }
   .intro-screen {
-    animation: introExit 0.55s 1.05s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+    animation: introExit 0.555s 1.05s cubic-bezier(0.76, 0, 0.24, 1) forwards;
   }
   .intro-logo {
-    animation: introLogo 0.9s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: introLogo 0.905s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .animate-fadeUp {
-    animation: fadeUp 0.45s ease both;
+    animation: fadeUp 0.455s ease both;
   }
   .animate-fadeIn {
-    animation: fadeIn 0.25s ease both;
+    animation: fadeIn 0.255s ease both;
   }
 }

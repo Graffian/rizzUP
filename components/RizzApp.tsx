@@ -321,6 +321,21 @@ export default function RizzApp() {
           </div>
         </section>
 
+        <section className="animate-entrance animate-delay-3 mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-[18px] border-2 border-line bg-panel/75 p-4 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.08)] sm:p-5">
+            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">13 languages</p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">Keep your voice, wherever the conversation goes.</p>
+          </div>
+          <div className="rounded-[18px] border-2 border-line bg-panel/75 p-4 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.08)] sm:p-5">
+            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">Three versions</p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">A few good directions, so one feels like you.</p>
+          </div>
+          <div className="rounded-[18px] border-2 border-line bg-panel/75 p-4 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.08)] sm:p-5">
+            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">Nothing stored</p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">Your message stays yours while you find the words.</p>
+          </div>
+        </section>
+
         {/* settings */}
         {showSettings && (
           <section className="mt-10 animate-fadeIn overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.1)]">
@@ -536,7 +551,6 @@ export default function RizzApp() {
                   style={{ animationDelay: i * 60 + 'ms' }}
                 >
                   <div className="flex items-center justify-between border-b-2 border-line px-5 py-3.5">
-                    <span className="rounded-full bg-gold/35 px-2 py-1 font-body text-[11px] font-bold text-paper">option {num(i)}</span>
                     <span className="font-body text-[11px] font-bold tracking-[0.06em] text-paper/70">
                       {r.vibe}
                     </span>
