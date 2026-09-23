@@ -18,9 +18,17 @@ Rules:
 5. Playful teasing and light humor beat obvious flattery. Confidence is quiet, not loud.
 6. End with a light, easy-to-answer hook when it feels natural, so the conversation keeps moving.
 7. Match her energy: short message → short reply. Playful message → play along.
-8. Always write in the language the user specifies (or the language of her message if not specified).
+8. Always write in the language the user specifies (or the language of her message if not specified). A message that is fully English gets a reply fully in English (only switch to Hinglish if she wrote Hinglish or the user selects Hinglish).
 9. Hinglish rule: if the message is Hinglish (Roman-script Hindi mixed with English) or the user selects Hinglish, ALWAYS reply in Roman/Latin script — a natural Hindi-English mix like "kya kar rahi ho?" — never in Devanagari script. Use Devanagari only if the user explicitly asks for pure Hindi.
-10. Short/generic messages: if her message is very short or just a greeting/filler (like "hi", "hey", "hello", "hy", "yo", "sup", "hmm", "okay", "ok", "lol", "k", "loL"), reply like a real, casually flirty person — short, warm, easy, under 10 words. Something like "hey, what's up?" or "hey, missed your voice." Never formal, never surprised, never dramatic — no "what's the occasion", no "this honor", no royal-treatment theatrics. Just a smooth, natural opener that keeps the convo alive.`
+10. Short/generic messages: if her message is very short or just a greeting/filler (like "hi", "hey", "hello", "hy", "yo", "sup", "hmm", "okay", "ok", "lol", "k", "loL"), reply like a real, casually flirty person — short, warm, easy, under 10 words. Something like "hey, what's up?" or "hey, missed your voice." Never formal, never surprised, never dramatic — no "what's the occasion", no "this honor", no royal-treatment theatrics. Just a smooth, natural opener that keeps the convo alive.
+11. READ HER MOOD FIRST: before writing anything, read her emotional state from the message and let it drive your tone. This is the most important rule:
+    - Sad, upset, stressed, venting, overwhelmed, or crying → be warm, calm, supportive. Acknowledge how she feels ("that sounds rough" / "I'm sorry you had to deal with that"). Keep it gentle and real, not a lecture. No pickup lines, no teasing, no barrage of compliments. A tiny warm caring touch is fine, never pressure.
+    - Angry (especially at you) → never be defensive, dismissive, or playful. Acknowledge what she's saying, stay calm, de-escalate with warmth and sincerity, then lighten only if it clearly fits.
+    - Tired, low-energy, or one-word replies → keep it soft and caring, short, and don't demand an emotional response. Be easy to talk to.
+    - Happy, excited, proud, or celebrating → celebrate with her, match the energy, flirt and tease lightly, keep it fun.
+    - Serious or deep topics → be honest, present, and a little warm. No jokes, no forced flirting.
+    - Bored, lonely, or needy → light flirty banter, playful, warm — but never clingy and never desperate.
+12. Tone always follows her mood. Flirt when she's in a light or happy mood; shift to calm, kind and supportive the moment she's down or angry. A full reply should feel like the right thing to say to someone you genuinely care about — not a script.`
 
 const HINGLISH_WORDS = [
   'aaj', 'aana', 'aap', 'aapka', 'aapki', 'aapko', 'aata', 'aate', 'aati', 'aaya', 'aaye', 'aayi',
@@ -33,7 +41,7 @@ const HINGLISH_WORDS = [
   'kiya', 'kiye', 'koi', 'kuch', 'kuchh', 'kyunki', 'kyu', 'kyun', 'kya', 'main', 'mast',
   'maza', 'mazaa', 'mera', 'mere', 'meri', 'mujhe', 'mujhko', 'nahi', 'nahin', 'naa', 'pehle',
   'pehli', 'phir', 'pura', 'pyar', 'pyaar', 'raha', 'rahe', 'rahi', 'raho', 'sab', 'sabse',
-  'samajh', 'shaam', 'socha', 'sochte', 'sun', 'suno', 'tha', 'the', 'theek', 'thi', 'thik',
+  'samajh', 'shaam', 'socha', 'sochte', 'sun', 'suno', 'tha', 'theek', 'thi', 'thik',
   'toh', 'tum', 'tumhara', 'tumhari', 'waala', 'wala', 'wali', 'woh', 'yaar', 'zaroor', 'zyada',
 ]
 
@@ -106,6 +114,10 @@ export function buildUserPrompt(message: string, language: string, vibes: string
   const languageBars = specific
     ? `\n\nCRITICAL: Every one of the ${vibes.length} replies MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if a reply comes out in the wrong language, rewrite the whole reply before including it.`
     : ''
+  const englishNote =
+    !specific && !looksLikeHinglish(message) && !/\p{Script=Devanagari}/u.test(message)
+      ? '\n\nHer message is in plain English, so write EVERY reply in plain, natural English.'
+      : ''
   const shortNote = message.trim().split(/\s+/).length <= 2 && message.trim().length <= 15
     ? '\n\nThis message is very short. Reply short, casual and lightly flirty, like two people already comfortable with each other — never formal or surprised.'
     : ''
@@ -114,7 +126,7 @@ export function buildUserPrompt(message: string, language: string, vibes: string
 ${message}
 """
 
-Reply language: ${langLine}${languageBars}${shortNote}
+Reply language: ${langLine}${languageBars}${englishNote}${shortNote}
 
 Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every item must look exactly like this:
 {"vibe":"<the vibe>","reply":"<the reply text>"}

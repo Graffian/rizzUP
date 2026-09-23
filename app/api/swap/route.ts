@@ -28,6 +28,10 @@ export async function POST(req: NextRequest) {
   }
 
   const hinglishMode = language === 'Hinglish' || looksLikeHinglish(message)
+  const englishMode =
+    (language === 'auto' || language === 'English') &&
+    !hinglishMode &&
+    !/\p{Script=Devanagari}/u.test(message)
   const langLine = !language || language === 'auto' ? 'the same language she wrote in' : languageLabel(language)
   const buildSwapPrompt = (extra = '') =>
     `The message:
@@ -71,6 +75,27 @@ Write exactly one reply with that vibe. Reply with ONLY the reply text — no qu
         )
         const fixed = retry.text.trim().replace(/^("|'|«|“)|("|'|»|”)$/g, '').trim()
         if (fixed && looksLikeHinglish(fixed)) reply = fixed
+      } catch {
+        // keep original reply if the retry fails
+      }
+    } else if (englishMode && looksLikeHinglish(reply)) {
+      try {
+        const retry = await hfChat(
+          token,
+          model,
+          [
+            { role: 'system', content: SYSTEM_PROMPT },
+            {
+              role: 'user',
+              content: buildSwapPrompt(
+                'The previous reply was in the wrong language. Rewrite it so the ENTIRE reply is in plain, natural English — no Hinglish words.'
+              ),
+            },
+          ],
+          3
+        )
+        const fixed = retry.text.trim().replace(/^("|'|«|“)|("|'|»|”)$/g, '').trim()
+        if (fixed && !looksLikeHinglish(fixed)) reply = fixed
       } catch {
         // keep original reply if the retry fails
       }

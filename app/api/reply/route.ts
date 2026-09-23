@@ -30,6 +30,10 @@ export async function POST(req: NextRequest) {
 
   const vibes = VIBES.slice(0, count)
   const hinglishMode = language === 'Hinglish' || looksLikeHinglish(message)
+  const englishMode =
+    (language === 'auto' || language === 'English') &&
+    !hinglishMode &&
+    !/\p{Script=Devanagari}/u.test(message)
   try {
     const { text, model: usedModel } = await hfChat(
       token,
@@ -38,22 +42,35 @@ export async function POST(req: NextRequest) {
     )
     let replies = parseReplies(text, vibes)
 
-    if (hinglishMode && replies.length) {
-      replies = replies.filter((r) => looksLikeHinglish(r.reply))
-      for (let round = 0; round < 2 && replies.length < vibes.length; round++) {
-        const missing = vibes.filter((v) => !replies.some((r) => r.vibe === v))
+    const backfill = async (
+      lang: string,
+      keep: (r: { vibe: string; reply: string }) => boolean
+    ) => {
+      const accepted = replies.filter(keep)
+      for (let round = 0; round < 2 && accepted.length < vibes.length; round++) {
+        const missing = vibes.filter((v) => !accepted.some((r) => r.vibe === v))
+        if (!missing.length) break
         try {
-          const fixed = await hfChat(token, model, buildFixMessages(message, 'Hinglish', missing))
-          const fixedReplies = parseReplies(fixed.text, missing).filter((r) =>
-            looksLikeHinglish(r.reply)
-          )
-          replies = vibes
-            .map((v) => replies.find((r) => r.vibe === v) || fixedReplies.find((r) => r.vibe === v))
-            .filter((r): r is { vibe: string; reply: string } => !!r)
+          const fixed = await hfChat(token, model, buildFixMessages(message, lang, missing))
+          const fixedReplies = parseReplies(fixed.text, missing).filter(keep)
+          for (const fr of fixedReplies) {
+            if (accepted.length < vibes.length && !accepted.some((r) => r.vibe === fr.vibe)) {
+              accepted.push(fr)
+            }
+          }
         } catch {
           break
         }
       }
+      return vibes
+        .map((v) => accepted.find((r) => r.vibe === v))
+        .filter((r): r is { vibe: string; reply: string } => !!r)
+    }
+
+    if (hinglishMode && replies.length) {
+      replies = await backfill('Hinglish', (r) => looksLikeHinglish(r.reply))
+    } else if (englishMode && replies.length) {
+      replies = await backfill('English', (r) => !looksLikeHinglish(r.reply))
     }
 
     if (!replies.length) {
