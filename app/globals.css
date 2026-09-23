@@ -4,21 +4,32 @@
 
 :root {
   color-scheme: light;
-  --color-ink: 247 247 251;
-  --color-ink2: 239 239 246;
+  --color-ink: 255 253 248;
+  --color-ink2: 251 247 240;
   --color-panel: 255 255 255;
-  --color-panel2: 246 245 251;
-  --color-line: 225 225 236;
-  --color-line2: 193 193 211;
-  --color-paper: 30 31 54;
-  --color-muted: 91 94 119;
-  --color-faint: 137 139 159;
-  --color-rust: 112 87 255;
-  --color-gold: 234 173 61;
+  --color-panel2: 255 249 240;
+  --color-line: 192 208 229;
+  --color-line2: 117 145 181;
+  --color-paper: 39 53 74;
+  --color-muted: 90 108 130;
+  --color-faint: 137 152 170;
+  --color-rust: 242 128 125;
+  --color-gold: 246 194 83;
 }
 
 .theme-light {
   color-scheme: light;
+  --color-ink: 255 253 248;
+  --color-ink2: 251 247 240;
+  --color-panel: 255 255 255;
+  --color-panel2: 255 249 240;
+  --color-line: 192 208 229;
+  --color-line2: 117 145 181;
+  --color-paper: 39 53 74;
+  --color-muted: 90 108 130;
+  --color-faint: 137 152 170;
+  --color-rust: 242 128 125;
+  --color-gold: 246 194 83;
 }
 
 .theme-dark {
@@ -60,7 +71,10 @@
 body {
   @apply bg-ink font-body text-paper antialiased;
   text-rendering: optimizeLegibility;
-  background-image: linear-gradient(135deg, rgb(var(--color-paper) / 0.06), transparent 42%);
+  background-image:
+    linear-gradient(135deg, rgb(var(--color-paper) / 0.04), transparent 42%),
+    repeating-linear-gradient(to bottom, transparent 0, transparent 31px, rgb(var(--color-line) / 0.2) 32px, transparent 33px);
+  background-size: auto, 100% 32px;
 }
 
 ::selection {
@@ -82,7 +96,7 @@ body {
     background: linear-gradient(
       100deg,
       transparent 25%,
-      rgba(32, 42, 49, 0.05) 50%,
+      rgb(var(--color-paper) / 0.06) 50%,
       transparent 75%
     );
     animation: shimmer 1.4s infinite;
