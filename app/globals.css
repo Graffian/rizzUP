@@ -9,11 +9,13 @@
 body {
   @apply bg-ink font-body text-paper antialiased;
   text-rendering: optimizeLegibility;
+  background-image: radial-gradient(circle at 1px 1px, rgba(247, 244, 236, 0.045) 1px, transparent 0);
+  background-size: 28px 28px;
 }
 
 ::selection {
-  background: #ff5a36;
-  color: #0b0a09;
+  background: #ff8b6b;
+  color: #101827;
 }
 
 @layer utilities {
@@ -21,7 +23,7 @@ body {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   .shimmer {
-    @apply relative overflow-hidden bg-panel;
+    @apply relative overflow-hidden rounded-2xl bg-panel;
   }
   .shimmer::after {
     content: '';

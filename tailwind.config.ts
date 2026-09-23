@@ -9,17 +9,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: '#0b0a09',
-        ink2: '#111009',
-        panel: '#141210',
-        panel2: '#1a1714',
-        line: '#27241c',
-        line2: '#3a352b',
-        paper: '#f4f1ea',
-        muted: '#8a857a',
-        faint: '#5c584f',
-        rust: '#ff5a36',
-        gold: '#ffb454',
+        ink: '#101827',
+        ink2: '#172236',
+        panel: '#1a2940',
+        panel2: '#22334d',
+        line: '#2b3b54',
+        line2: '#40536e',
+        paper: '#f7f4ec',
+        muted: '#a7b3c4',
+        faint: '#74839a',
+        rust: '#ff8b6b',
+        gold: '#f3c969',
       },
       fontFamily: {
         body: ['var(--font-body)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
