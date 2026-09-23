@@ -229,7 +229,7 @@ export default function RizzApp() {
               className="h-9 w-auto select-none sm:h-10"
             />
           </div>
-          <span className="mt-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted">reply better</span>
+          <span className="mt-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">a wingman in your pocket</span>
         </div>
       </div>
       <div className="fixed inset-0 -z-20 bg-ink" />
@@ -328,7 +328,7 @@ export default function RizzApp() {
           <section className="mt-10 animate-fadeIn overflow-hidden rounded-2xl border border-line bg-panel/90 shadow-2xl shadow-black/10">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-5 py-3.5">
               <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-                <span className="text-rust">02</span>&ensp;/&ensp;api access
+                api access
               </span>
               <div className="flex items-center gap-1 rounded-lg border border-line bg-ink2/70 p-1">
                 {(['light', 'dark', 'system'] as const).map((themeOption) => (
@@ -407,7 +407,7 @@ export default function RizzApp() {
         <section className="animate-entrance animate-delay-4 mt-12 overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_18px_50px_rgb(0_0_0_/_0.08)] sm:mt-14">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-              <span className="mr-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rust px-1.5 text-[9px] font-bold text-ink">01</span> the text
+              the text
             </span>
             <button
               onClick={pasteFromClipboard}
@@ -514,7 +514,7 @@ export default function RizzApp() {
         <section className="animate-entrance animate-delay-5 mt-16 sm:mt-20">
           <div className="mb-5 flex items-baseline justify-between border-b border-line pb-3">
             <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-              <span className="mr-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rust px-1.5 text-[9px] font-bold text-ink">03</span> your options
+              your options
             </span>
             {meta && (
               <span className="text-[11px] font-medium tracking-[0.08em] text-faint">
