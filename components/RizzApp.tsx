@@ -33,7 +33,7 @@ const initialPrefs: Prefs = {
   model: 'deepseek-ai/DeepSeek-V3-0324',
   lang: 'auto',
   count: '3',
-  theme: 'system',
+  theme: 'light',
 }
 
 function loadPrefs(): Prefs {
@@ -44,7 +44,11 @@ function loadPrefs(): Prefs {
   } catch {
     // ignore corrupt storage
   }
-  return { ...initialPrefs, ...(stored || {}) }
+  return {
+    ...initialPrefs,
+    ...(stored || {}),
+    theme: stored?.theme === 'dark' || stored?.theme === 'system' ? stored.theme : 'light',
+  }
 }
 
 function errorMessage(err: unknown): string {
