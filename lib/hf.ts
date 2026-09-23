@@ -12,6 +12,8 @@ export class HFError extends Error {
 }
 
 export async function readEnv(key: string): Promise<string | undefined> {
+  const local = process.env[key]
+  if (local !== undefined && local !== null && local !== '') return local
   try {
     const rctx = getOptionalRequestContext()
     if (rctx) {
@@ -19,9 +21,9 @@ export async function readEnv(key: string): Promise<string | undefined> {
       if (val !== undefined && val !== null && String(val) !== '') return String(val)
     }
   } catch {
-    // Not running on Cloudflare (local dev / build) → fall back to process.env.
+    // No Cloudflare request context (local dev / Netlify) → nothing else to try.
   }
-  return process.env[key] || undefined
+  return undefined
 }
 
 export async function hfUrl(): Promise<string> {

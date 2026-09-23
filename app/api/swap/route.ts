@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { SYSTEM_PROMPT, languageLabel, looksLikeHinglish } from '@/lib/ai'
 import { defaultModel, hfChat, readEnv } from '@/lib/hf'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   let body: any
