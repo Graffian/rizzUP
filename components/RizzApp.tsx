@@ -221,7 +221,7 @@ export default function RizzApp() {
     <div className={`theme-${prefs.theme} relative isolate min-h-screen overflow-hidden text-paper`}>
       <div className="intro-screen pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-ink">
         <div className="intro-logo flex flex-col items-center">
-          <div className="inline-flex rounded-2xl bg-[#2e2a27] px-4 py-3 shadow-xl shadow-black/10">
+          <div className="inline-flex rounded-2xl bg-[#242727] px-4 py-3 shadow-xl shadow-black/10">
             <img
               src="/rizzup-wordmark-128h.png"
               srcSet="/rizzup-wordmark-256h.png 2x, /rizzup-wordmark-512h.png 4x"
@@ -237,7 +237,7 @@ export default function RizzApp() {
         {/* header */}
         <header className="animate-entrance animate-delay-1 flex items-center justify-between pb-2">
           <div>
-            <div className="inline-flex -rotate-2 rounded-xl bg-[#2e2a27] px-3 py-2 shadow-sm">
+            <div className="inline-flex -rotate-2 rounded-xl bg-[#242727] px-3 py-2 shadow-sm">
               <img
                 src="/rizzup-wordmark-128h.png"
                 srcSet="/rizzup-wordmark-256h.png 2x, /rizzup-wordmark-512h.png 4x"
