@@ -209,7 +209,7 @@ export default function RizzApp() {
   const num = useCallback((i: number) => String(i + 1).padStart(2, '0'), [])
 
   const selectBaseClass =
-    'cursor-pointer appearance-none rounded-2xl border-2 border-line bg-ink2/80 px-3.5 py-2.5 pr-8 font-body text-[12px] font-semibold text-paper outline-none transition hover:border-line2 focus:border-rust focus:ring-4 focus:ring-rust/10'
+    'min-w-[112px] cursor-pointer appearance-none rounded-2xl border-2 border-line bg-ink2/80 px-3.5 py-2.5 pr-8 font-body text-[12px] font-semibold text-paper outline-none transition hover:border-line2 focus:border-rust focus:ring-4 focus:ring-rust/10'
 
   const selectStyle = {
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23657078' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
@@ -271,45 +271,21 @@ export default function RizzApp() {
         </header>
 
         {/* hero */}
-        <section className="mt-16 grid items-end gap-12 sm:mt-20 md:grid-cols-[minmax(0,1fr)_280px] md:gap-16">
+        <section className="mt-16 sm:mt-20">
           <div className="animate-entrance animate-delay-2 max-w-3xl">
             <p className="mb-5 font-body text-[12px] font-bold tracking-[0.06em] text-rust">better words, less overthinking</p>
-            <h1 className="max-w-2xl font-head text-[44px] font-bold leading-[0.98] tracking-[-0.045em] sm:text-[72px]">
+            <h1 className="max-w-2xl font-head text-[38px] font-bold leading-[0.98] tracking-[-0.045em] sm:text-[72px]">
               Reply like you{' '}
               <em className="font-serifit font-normal italic text-rust">mean it.</em>
             </h1>
             <p className="mt-6 max-w-xl text-[16px] leading-[1.65] text-muted">
               Paste the message. Get a handful of replies that sound like you on a
-              good day — one to tease, one to charm, one to keep short. No pickup
-              lines. No cringe. Built on a free AI.
+              good day — one to tease, one to charm, one to keep short. Built on a free AI.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-semibold tracking-[0.1em] text-muted/80">
               <span>13 languages</span>
-              <span className="text-rust">↯</span>
               <span>enter to generate</span>
-              <span className="text-rust">↯</span>
               <span>nothing stored</span>
-            </div>
-          </div>
-          <div className="animate-entrance animate-delay-3 relative hidden -rotate-1 overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/80 p-5 shadow-none md:block">
-            <div className="relative">
-              <div className="flex items-center justify-between border-b border-line pb-4">
-                <span className="font-body text-[11px] font-bold tracking-[0.08em] text-muted">your energy</span>
-                <span className="flex items-center gap-1.5 text-[11px] font-bold tracking-[0.06em] text-rust">
-                  <span className="h-1.5 w-1.5 rounded-full bg-rust" /> live
-                </span>
-              </div>
-              <p className="mt-5 font-head text-[21px] font-bold leading-tight tracking-[-0.03em] text-paper">
-                Specific beats smooth.
-              </p>
-              <p className="mt-2 text-[13px] leading-relaxed text-muted">
-                Pick a direction and we’ll find the words that sound like you.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <span className="rounded-full bg-rust px-3 py-1.5 text-[10px] font-bold tracking-[0.06em] text-ink">playful</span>
-                <span className="rounded-full border-2 border-line2 px-3 py-1.5 text-[10px] font-semibold tracking-[0.06em] text-muted">warm</span>
-                <span className="rounded-full border-2 border-line2 px-3 py-1.5 text-[10px] font-semibold tracking-[0.06em] text-muted">direct</span>
-              </div>
             </div>
           </div>
         </section>
@@ -427,7 +403,7 @@ export default function RizzApp() {
               spellCheck
               className="min-h-[128px] w-full resize-y rounded-[18px] border-2 border-line bg-ink2/80 px-4 py-4 text-[16px] leading-relaxed text-paper outline-none transition placeholder:text-faint focus:border-rust focus:ring-4 focus:ring-rust/10"
             />
-            <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+            <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-wrap items-end gap-3.5">
                 <label>
                   <span className="mb-2 block font-body text-[11px] font-bold tracking-[0.04em] text-muted/80">
@@ -468,7 +444,7 @@ export default function RizzApp() {
               <button
                 onClick={gen}
                 disabled={busy}
-                className="inline-flex items-center gap-2.5 rounded-[16px] border-2 border-rust bg-rust px-6 py-3.5 text-[14px] font-bold text-ink shadow-none transition hover:-translate-y-0.5 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2.5 rounded-[16px] border-2 border-rust bg-rust px-6 py-3.5 text-[14px] font-bold text-ink shadow-none transition hover:-translate-y-0.5 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
                 {busy ? (
                   <>
@@ -503,7 +479,7 @@ export default function RizzApp() {
 
         {/* results */}
         <section className="animate-entrance animate-delay-5 mt-16 sm:mt-20">
-          <div className="mb-5 flex items-baseline justify-between border-b border-line pb-3">
+          <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2 border-b border-line pb-3">
             <span className="font-head text-[15px] font-bold tracking-[-0.02em] text-paper">
               your options
             </span>
@@ -559,7 +535,6 @@ export default function RizzApp() {
             </div>
           ) : (
             <div className="relative overflow-hidden rounded-[24px] border-2 border-dashed border-line2/80 bg-panel/55 px-6 py-16 text-center shadow-none">
-              <span aria-hidden className="absolute right-8 top-5 rotate-12 font-serifit text-3xl text-gold/70">✦</span>
               <p className="font-head text-[15px] font-bold tracking-[-0.02em] text-muted">
                 awaiting input
               </p>
@@ -575,19 +550,20 @@ export default function RizzApp() {
         </section>
 
         {/* footer */}
-        <footer className="animate-entrance animate-delay-6 mt-20 flex flex-wrap items-center justify-between gap-3 border-t-2 border-line py-7 text-[11px] font-semibold tracking-[0.05em] text-faint">
+        <footer className="animate-entrance animate-delay-6 mt-20 flex flex-col items-start gap-3 border-t-2 border-line py-7 text-[11px] font-semibold tracking-[0.05em] text-faint sm:flex-row sm:items-center sm:justify-between">
           <span className="font-head text-[13px] font-bold tracking-[-0.01em] text-paper">
-            rizzup <span className="text-rust">✳</span> 2026
+            rizzup 2026
           </span>
-          <span className="flex items-center gap-2">
-            free hf inference <span className="text-line2">·</span> nothing stored
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>free hf inference</span>
+            <span>nothing stored</span>
           </span>
         </footer>
       </main>
 
       {/* toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-fadeUp rounded-xl border border-line border-l-2 border-l-rust bg-panel2 px-4 py-3 font-mono text-[11px] uppercase tracking-[0.1em] shadow-2xl">
+        <div className="fixed bottom-6 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-max -translate-x-1/2 animate-fadeUp rounded-xl border border-line border-l-2 border-l-rust bg-panel2 px-4 py-3 text-center font-body text-[11px] font-bold tracking-[0.04em] shadow-2xl">
           {toast.msg}
         </div>
       )}
