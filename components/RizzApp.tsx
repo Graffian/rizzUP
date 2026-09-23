@@ -212,7 +212,7 @@ export default function RizzApp() {
     'min-w-[112px] cursor-pointer appearance-none rounded-2xl border-2 border-line bg-ink2/80 px-3.5 py-2.5 pr-8 font-body text-[12px] font-semibold text-paper outline-none transition hover:border-line2 focus:border-rust focus:ring-4 focus:ring-rust/10'
 
   const selectStyle = {
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23657078' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23696056' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'right 9px center',
   } as const
@@ -221,7 +221,7 @@ export default function RizzApp() {
     <div className={`theme-${prefs.theme} relative isolate min-h-screen overflow-hidden text-paper`}>
       <div className="intro-screen pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-ink">
         <div className="intro-logo flex flex-col items-center">
-          <div className="inline-flex rounded-2xl bg-[#202a31] px-4 py-3 shadow-xl shadow-black/10">
+          <div className="inline-flex rounded-2xl bg-[#2e2a27] px-4 py-3 shadow-xl shadow-black/10">
             <img
               src="/rizzup-wordmark-128h.png"
               srcSet="/rizzup-wordmark-256h.png 2x, /rizzup-wordmark-512h.png 4x"
@@ -237,7 +237,7 @@ export default function RizzApp() {
         {/* header */}
         <header className="animate-entrance animate-delay-1 flex items-center justify-between pb-2">
           <div>
-            <div className="inline-flex -rotate-2 rounded-xl bg-[#202a31] px-3 py-2 shadow-sm">
+            <div className="inline-flex -rotate-2 rounded-xl bg-[#2e2a27] px-3 py-2 shadow-sm">
               <img
                 src="/rizzup-wordmark-128h.png"
                 srcSet="/rizzup-wordmark-256h.png 2x, /rizzup-wordmark-512h.png 4x"

@@ -4,47 +4,47 @@
 
 :root {
   color-scheme: light;
-  --color-ink: 255 253 248;
-  --color-ink2: 251 247 240;
-  --color-panel: 255 255 255;
-  --color-panel2: 255 249 240;
-  --color-line: 192 208 229;
-  --color-line2: 117 145 181;
-  --color-paper: 39 53 74;
-  --color-muted: 90 108 130;
-  --color-faint: 137 152 170;
-  --color-rust: 242 128 125;
-  --color-gold: 246 194 83;
+  --color-ink: 250 247 241;
+  --color-ink2: 244 240 232;
+  --color-panel: 255 254 250;
+  --color-panel2: 249 244 235;
+  --color-line: 221 214 202;
+  --color-line2: 164 153 136;
+  --color-paper: 48 43 38;
+  --color-muted: 105 96 87;
+  --color-faint: 153 143 130;
+  --color-rust: 226 105 91;
+  --color-gold: 239 177 66;
 }
 
 .theme-light {
   color-scheme: light;
-  --color-ink: 255 253 248;
-  --color-ink2: 251 247 240;
-  --color-panel: 255 255 255;
-  --color-panel2: 255 249 240;
-  --color-line: 192 208 229;
-  --color-line2: 117 145 181;
-  --color-paper: 39 53 74;
-  --color-muted: 90 108 130;
-  --color-faint: 137 152 170;
-  --color-rust: 242 128 125;
-  --color-gold: 246 194 83;
+  --color-ink: 250 247 241;
+  --color-ink2: 244 240 232;
+  --color-panel: 255 254 250;
+  --color-panel2: 249 244 235;
+  --color-line: 221 214 202;
+  --color-line2: 164 153 136;
+  --color-paper: 48 43 38;
+  --color-muted: 105 96 87;
+  --color-faint: 153 143 130;
+  --color-rust: 226 105 91;
+  --color-gold: 239 177 66;
 }
 
 .theme-dark {
   color-scheme: dark;
-  --color-ink: 18 19 34;
-  --color-ink2: 28 29 50;
-  --color-panel: 35 36 62;
-  --color-panel2: 44 45 76;
-  --color-line: 55 56 85;
-  --color-line2: 79 80 112;
-  --color-paper: 247 247 251;
-  --color-muted: 177 179 199;
-  --color-faint: 122 124 151;
-  --color-rust: 150 132 255;
-  --color-gold: 244 196 91;
+  --color-ink: 28 26 24;
+  --color-ink2: 39 35 32;
+  --color-panel: 50 45 41;
+  --color-panel2: 61 54 48;
+  --color-line: 76 68 60;
+  --color-line2: 104 93 81;
+  --color-paper: 250 247 239;
+  --color-muted: 184 174 160;
+  --color-faint: 137 126 112;
+  --color-rust: 242 126 100;
+  --color-gold: 242 188 83;
 }
 
 .theme-system {
@@ -54,17 +54,17 @@
 @media (prefers-color-scheme: dark) {
   .theme-system {
     color-scheme: dark;
-    --color-ink: 18 19 34;
-    --color-ink2: 28 29 50;
-    --color-panel: 35 36 62;
-    --color-panel2: 44 45 76;
-    --color-line: 55 56 85;
-    --color-line2: 79 80 112;
-    --color-paper: 247 247 251;
-    --color-muted: 177 179 199;
-    --color-faint: 122 124 151;
-    --color-rust: 150 132 255;
-    --color-gold: 244 196 91;
+    --color-ink: 28 26 24;
+  --color-ink2: 39 35 32;
+  --color-panel: 50 45 41;
+  --color-panel2: 61 54 48;
+  --color-line: 76 68 60;
+  --color-line2: 104 93 81;
+  --color-paper: 250 247 239;
+  --color-muted: 184 174 160;
+  --color-faint: 137 126 112;
+  --color-rust: 242 126 100;
+  --color-gold: 242 188 83;
   }
 }
 
