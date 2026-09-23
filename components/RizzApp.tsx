@@ -8,7 +8,8 @@ import {
 } from 'react'
 
 type Reply = { vibe: string; reply: string }
-type Prefs = { token: string; model: string; lang: string; count: string }
+type Theme = 'light' | 'dark' | 'system'
+type Prefs = { token: string; model: string; lang: string; count: string; theme: Theme }
 
 const LANGUAGES = [
   { value: 'auto', label: 'auto' },
@@ -32,6 +33,7 @@ const initialPrefs: Prefs = {
   model: 'deepseek-ai/DeepSeek-V3-0324',
   lang: 'auto',
   count: '3',
+  theme: 'system',
 }
 
 function loadPrefs(): Prefs {
@@ -216,13 +218,26 @@ export default function RizzApp() {
   } as const
 
   return (
-    <div className="relative isolate min-h-screen overflow-hidden text-paper">
+    <div className={`theme-${prefs.theme} relative isolate min-h-screen overflow-hidden text-paper`}>
+      <div className="intro-screen pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-ink">
+        <div className="intro-logo flex flex-col items-center">
+          <div className="inline-flex rounded-2xl bg-[#202a31] px-4 py-3 shadow-xl shadow-black/10">
+            <img
+              src="/rizzup-wordmark-128h.png"
+              srcSet="/rizzup-wordmark-256h.png 2x, /rizzup-wordmark-512h.png 4x"
+              alt="RizzUp"
+              className="h-9 w-auto select-none sm:h-10"
+            />
+          </div>
+          <span className="mt-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted">reply better</span>
+        </div>
+      </div>
       <div className="fixed inset-0 -z-20 bg-ink" />
       <div
         className="fixed inset-0 -z-20"
         style={{
           background:
-            'radial-gradient(720px 480px at 92% -10%, rgba(238,109,82,0.11), transparent 64%), radial-gradient(620px 480px at -10% 105%, rgba(220,174,63,0.08), transparent 62%)',
+            'radial-gradient(720px 480px at 92% -10%, rgb(var(--color-rust) / 0.12), transparent 64%), radial-gradient(620px 480px at -10% 105%, rgb(var(--color-gold) / 0.1), transparent 62%)',
         }}
       />
 
@@ -284,7 +299,7 @@ export default function RizzApp() {
               <span>nothing stored</span>
             </div>
           </div>
-          <div className="animate-entrance animate-delay-3 relative hidden overflow-hidden rounded-2xl border border-line bg-panel/70 p-5 shadow-[0_18px_50px_rgba(32,42,49,0.06)] md:block">
+          <div className="animate-entrance animate-delay-3 relative hidden overflow-hidden rounded-2xl border border-line bg-panel/70 p-5 shadow-[0_18px_50px_rgb(0_0_0_/_0.06)] md:block">
             <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-rust/10 blur-2xl" />
             <div className="relative">
               <div className="flex items-center justify-between border-b border-line pb-4">
@@ -311,8 +326,21 @@ export default function RizzApp() {
         {/* settings */}
         {showSettings && (
           <section className="mt-10 animate-fadeIn overflow-hidden rounded-2xl border border-line bg-panel/90 shadow-2xl shadow-black/10">
-            <div className="border-b border-line px-5 py-3.5 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
-              <span className="text-rust">02</span>&ensp;/&ensp;api access
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-5 py-3.5">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+                <span className="text-rust">02</span>&ensp;/&ensp;api access
+              </span>
+              <div className="flex items-center gap-1 rounded-lg border border-line bg-ink2/70 p-1">
+                {(['light', 'dark', 'system'] as const).map((themeOption) => (
+                  <button
+                    key={themeOption}
+                    onClick={() => savePrefs({ ...prefs, theme: themeOption })}
+                    className={`rounded-md px-2.5 py-1.5 text-[10px] font-semibold capitalize tracking-[0.04em] transition ${prefs.theme === themeOption ? 'bg-paper text-ink shadow-sm' : 'text-muted hover:text-paper'}`}
+                  >
+                    {themeOption}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="grid gap-7 p-5 sm:p-6 md:grid-cols-[1.4fr_1fr]">
               <div>
@@ -376,7 +404,7 @@ export default function RizzApp() {
         )}
 
         {/* editor */}
-        <section className="animate-entrance animate-delay-4 mt-12 overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_18px_50px_rgba(32,42,49,0.08)] sm:mt-14">
+        <section className="animate-entrance animate-delay-4 mt-12 overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_18px_50px_rgb(0_0_0_/_0.08)] sm:mt-14">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
               <span className="mr-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rust px-1.5 text-[9px] font-bold text-ink">01</span> the text
@@ -449,7 +477,7 @@ export default function RizzApp() {
               <button
                 onClick={gen}
                 disabled={busy}
-                className="inline-flex items-center gap-2.5 rounded-xl bg-rust px-6 py-3.5 text-[14px] font-semibold text-ink shadow-lg shadow-rust/10 transition hover:-translate-y-0.5 hover:bg-[#ff9b7e] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-2.5 rounded-xl bg-rust px-6 py-3.5 text-[14px] font-semibold text-ink shadow-lg shadow-rust/10 transition hover:-translate-y-0.5 hover:bg-rust/80 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {busy ? (
                   <>

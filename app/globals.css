@@ -4,17 +4,68 @@
 
 :root {
   color-scheme: light;
+  --color-ink: 247 247 251;
+  --color-ink2: 239 239 246;
+  --color-panel: 255 255 255;
+  --color-panel2: 246 245 251;
+  --color-line: 225 225 236;
+  --color-line2: 193 193 211;
+  --color-paper: 30 31 54;
+  --color-muted: 91 94 119;
+  --color-faint: 137 139 159;
+  --color-rust: 112 87 255;
+  --color-gold: 234 173 61;
+}
+
+.theme-light {
+  color-scheme: light;
+}
+
+.theme-dark {
+  color-scheme: dark;
+  --color-ink: 18 19 34;
+  --color-ink2: 28 29 50;
+  --color-panel: 35 36 62;
+  --color-panel2: 44 45 76;
+  --color-line: 55 56 85;
+  --color-line2: 79 80 112;
+  --color-paper: 247 247 251;
+  --color-muted: 177 179 199;
+  --color-faint: 122 124 151;
+  --color-rust: 150 132 255;
+  --color-gold: 244 196 91;
+}
+
+.theme-system {
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  .theme-system {
+    color-scheme: dark;
+    --color-ink: 18 19 34;
+    --color-ink2: 28 29 50;
+    --color-panel: 35 36 62;
+    --color-panel2: 44 45 76;
+    --color-line: 55 56 85;
+    --color-line2: 79 80 112;
+    --color-paper: 247 247 251;
+    --color-muted: 177 179 199;
+    --color-faint: 122 124 151;
+    --color-rust: 150 132 255;
+    --color-gold: 244 196 91;
+  }
 }
 
 body {
   @apply bg-ink font-body text-paper antialiased;
   text-rendering: optimizeLegibility;
-  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent 42%);
+  background-image: linear-gradient(135deg, rgb(var(--color-paper) / 0.06), transparent 42%);
 }
 
 ::selection {
-  background: #ee6d52;
-  color: #fffdf8;
+  background: rgb(var(--color-rust));
+  color: rgb(var(--color-ink));
 }
 
 @layer utilities {
@@ -89,14 +140,46 @@ body {
     .animate-entrance,
     .animate-fadeUp,
     .animate-fadeIn,
+    .intro-logo,
     .shimmer::after {
       animation: none;
+    }
+    .intro-screen {
+      opacity: 0;
+      visibility: hidden;
     }
   }
   @keyframes fadeIn {
     from {
       opacity: 0;
     }
+  }
+  @keyframes introLogo {
+    0% {
+      opacity: 0;
+      transform: translateY(14px) scale(0.92);
+    }
+    55% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @keyframes introExit {
+    to {
+      opacity: 0;
+      transform: scale(1.025);
+      visibility: hidden;
+    }
+  }
+  .intro-screen {
+    animation: introExit 0.55s 1.05s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  }
+  .intro-logo {
+    animation: introLogo 0.9s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   .animate-fadeUp {
     animation: fadeUp 0.45s ease both;
