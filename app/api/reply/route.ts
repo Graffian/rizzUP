@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { VIBES, buildFixMessages, buildMessages, looksLikeHinglish, parseReplies } from '@/lib/ai'
-import { DEFAULT_MODEL, hfChat } from '@/lib/hf'
+import { defaultModel, hfChat, readEnv } from '@/lib/hf'
 
-export const runtime = 'nodejs'
+export const runtime = 'edge'
 
 export async function POST(req: NextRequest) {
   let body: any
@@ -12,8 +12,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 })
   }
 
-  const token = String(body.token || process.env.HF_TOKEN || '').trim()
-  const model = String(body.model || DEFAULT_MODEL).trim() || DEFAULT_MODEL
+  const [envToken, dModel] = await Promise.all([readEnv('HF_TOKEN'), defaultModel()])
+  const token = String(body.token || envToken || '').trim()
+  const model = String(body.model || dModel).trim() || dModel
   const message = String(body.message || '').trim()
   const language = String(body.language || 'auto')
   let count = parseInt(body.count, 10) || 3

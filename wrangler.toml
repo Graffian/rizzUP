@@ -1,0 +1,6 @@
+name = "rizzup"
+pages_build_output_dir = ".vercel/output/static"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+HF_MODEL = "deepseek-ai/DeepSeek-V3-0324"
