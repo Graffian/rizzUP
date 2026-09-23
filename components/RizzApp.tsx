@@ -8,7 +8,8 @@ import {
 } from 'react'
 
 type Reply = { vibe: string; reply: string }
-type Prefs = { token: string; model: string; lang: string; count: string }
+type Theme = 'light' | 'dark' | 'system'
+type Prefs = { token: string; model: string; lang: string; count: string; theme: Theme }
 
 const LANGUAGES = [
   { value: 'auto', label: 'auto' },
@@ -32,6 +33,7 @@ const initialPrefs: Prefs = {
   model: 'deepseek-ai/DeepSeek-V3-0324',
   lang: 'auto',
   count: '3',
+  theme: 'light',
 }
 
 function loadPrefs(): Prefs {
@@ -42,7 +44,11 @@ function loadPrefs(): Prefs {
   } catch {
     // ignore corrupt storage
   }
-  return { ...initialPrefs, ...(stored || {}) }
+  return {
+    ...initialPrefs,
+    ...(stored || {}),
+    theme: stored?.theme === 'dark' || stored?.theme === 'system' ? stored.theme : 'light',
+  }
 }
 
 function errorMessage(err: unknown): string {
@@ -207,52 +213,76 @@ export default function RizzApp() {
   const num = useCallback((i: number) => String(i + 1).padStart(2, '0'), [])
 
   const selectBaseClass =
-    'cursor-pointer appearance-none rounded-[4px] border border-line bg-ink2 px-3 py-2 pr-8 font-mono text-[12px] uppercase tracking-[0.12em] text-paper outline-none transition hover:border-line2 focus:border-rust'
+    'min-w-[112px] cursor-pointer appearance-none rounded-2xl border-2 border-line bg-ink2/80 px-3.5 py-2.5 pr-8 font-body text-[12px] font-semibold text-paper outline-none transition hover:border-line2 focus:border-rust focus:ring-4 focus:ring-rust/10'
 
   const selectStyle = {
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a857a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23696056' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'right 9px center',
   } as const
 
   return (
-    <div className="relative isolate min-h-screen text-paper">
-      {/* backdrop */}
-      <div className="fixed inset-0 -z-20 bg-ink" />
-      <div
-        className="fixed inset-0 -z-20"
-        style={{
-          background:
-            'radial-gradient(900px 520px at 82% -8%, rgba(255,90,54,0.07), transparent 60%), radial-gradient(760px 520px at -8% 112%, rgba(255,180,84,0.05), transparent 60%)',
-        }}
-      />
-      {/* giant watermark */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed -right-8 top-6 z-0 select-none font-head text-[46vw] leading-none text-transparent sm:text-[30rem]"
-        style={{ WebkitTextStroke: '1.5px rgba(244,241,234,0.045)' }}
-      >
-        R
-      </div>
-
-      <main className="relative z-10 mx-auto w-full max-w-[840px] px-5 py-8 sm:px-8 sm:py-10">
-        {/* header */}
-        <header className="flex items-end justify-between border-b border-line pb-4">
-          <div>
+    <div className={`theme-${prefs.theme} relative isolate min-h-screen overflow-hidden text-paper`}>
+      <div className="intro-screen pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-ink">
+        <div className="intro-logo flex flex-col items-center">
+          <div className="inline-flex rounded-2xl bg-[#242727] px-4 py-3 shadow-xl shadow-black/10">
             <img
               src="/rizzup-wordmark-128h.png"
               srcSet="/rizzup-wordmark-256h.png 2x, /rizzup-wordmark-512h.png 4x"
               alt="RizzUp"
-              className="h-12 w-auto select-none sm:h-14"
+              className="h-9 w-auto select-none sm:h-10"
             />
-            <p className="mt-1.5 font-mono text-[10.5px] uppercase tracking-[0.22em] text-faint">
+          </div>
+          <span className="mt-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">a wingman in your pocket</span>
+        </div>
+      </div>
+      <div className="fixed inset-0 -z-20 bg-ink" />
+      <main className="relative z-10 mx-auto w-full max-w-[980px] px-5 py-6 sm:px-10 sm:py-10 lg:py-14">
+        {/* header */}
+        <header className="animate-entrance animate-delay-1 flex items-center justify-between pb-2">
+          <div>
+            <div className="inline-flex -rotate-2 rounded-xl bg-[#242727] px-3 py-2 shadow-sm">
+              <img
+                src="/rizzup-wordmark-128h.png"
+                srcSet="/rizzup-wordmark-256h.png 2x, /rizzup-wordmark-512h.png 4x"
+                alt="RizzUp"
+                className="h-7 w-auto select-none sm:h-8"
+              />
+            </div>
+            <p className="mt-2 font-body text-[11px] font-semibold tracking-[0.08em] text-muted/80">
               a wingman in your pocket
             </p>
           </div>
-          <button
-            onClick={() => setShowSettings((v) => !v)}
-            className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-muted transition hover:text-paper"
-          >
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => savePrefs({ ...prefs, theme: prefs.theme === 'dark' ? 'light' : 'dark' })}
+              aria-label={prefs.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="flex h-10 w-10 items-center justify-center rounded-[14px] border-2 border-line2/70 bg-panel/80 text-muted transition hover:border-rust hover:bg-rust/10 hover:text-paper"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+                aria-hidden
+              >
+                {prefs.theme === 'dark' ? (
+                  <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.7 6.7 0 0 0 21 12.8Z" />
+                ) : (
+                  <>
+                    <circle cx="12" cy="12" r="3.5" />
+                    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                  </>
+                )}
+              </svg>
+            </button>
+            <button
+              onClick={() => setShowSettings((v) => !v)}
+              className="flex items-center gap-2 rounded-[14px] border-2 border-line2/70 bg-panel/80 px-3.5 py-2 font-body text-[11px] font-bold tracking-[0.03em] text-muted transition hover:border-rust hover:bg-rust/10 hover:text-paper"
+            >
             <span className="hidden sm:inline">{showSettings ? 'close' : 'settings'}</span>
             <svg
               viewBox="0 0 24 24"
@@ -267,38 +297,67 @@ export default function RizzApp() {
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
-          </button>
+            </button>
+          </div>
         </header>
 
         {/* hero */}
-        <section className="mt-12 max-w-2xl sm:mt-16">
-          <h1 className="font-head text-[40px] font-bold leading-[1.02] tracking-[-0.03em] sm:text-[60px]">
-            Reply like you{' '}
-            <em className="font-serifit font-normal italic text-rust">mean it.</em>
-          </h1>
-          <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted">
-            Paste the message. Get a handful of replies that sound like you on a
-            good day — one to tease, one to charm, one to keep short. No pickup
-            lines. No cringe. Built on a free AI.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-[10.5px] uppercase tracking-[0.18em] text-faint">
-            <span>13 languages</span>
-            <span className="text-rust">↯</span>
-            <span>enter to generate</span>
-            <span className="text-rust">↯</span>
-            <span>nothing stored</span>
+        <section className="mt-16 sm:mt-20">
+          <div className="animate-entrance animate-delay-2 max-w-3xl">
+            <p className="mb-5 font-body text-[12px] font-bold tracking-[0.06em] text-rust">better words, less overthinking</p>
+            <h1 className="max-w-2xl font-head text-[38px] font-bold leading-[0.98] tracking-[-0.045em] sm:text-[72px]">
+              Reply like you{' '}
+              <em className="font-serifit font-normal italic text-rust">mean it.</em>
+            </h1>
+            <p className="mt-6 max-w-xl text-[16px] leading-[1.65] text-muted">
+              Paste the message. Get a handful of replies that sound like you on a
+              good day — one to tease, one to charm, one to keep short.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-semibold tracking-[0.1em] text-muted/80">
+              <span>13 languages</span>
+              <span>enter to generate</span>
+              <span>nothing stored</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="animate-entrance animate-delay-3 mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-[18px] border-2 border-line bg-panel/75 p-4 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.08)] sm:p-5">
+            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">Start with context</p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">Paste the message as it happened for a more natural reply.</p>
+          </div>
+          <div className="rounded-[18px] border-2 border-line bg-panel/75 p-4 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.08)] sm:p-5">
+            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">Keep it yours</p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">Use each draft as a starting point, then make it sound like you.</p>
+          </div>
+          <div className="rounded-[18px] border-2 border-line bg-panel/75 p-4 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.08)] sm:p-5">
+            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">Ready when you are</p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">Press enter to generate, or use shift + enter for a new line.</p>
           </div>
         </section>
 
         {/* settings */}
         {showSettings && (
-          <section className="mt-10 animate-fadeIn border border-line bg-panel">
-            <div className="border-b border-line px-5 py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
-              <span className="text-rust">02</span>&ensp;/&ensp;api access
+          <section className="mt-10 animate-fadeIn overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.1)]">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-5 py-3.5">
+              <span className="font-head text-[15px] font-bold tracking-[-0.02em] text-paper">
+                api access
+              </span>
+              <div className="flex items-center gap-1 rounded-xl border-2 border-line bg-ink2/70 p-1">
+                {(['light', 'dark', 'system'] as const).map((themeOption) => (
+                  <button
+                    key={themeOption}
+                    onClick={() => savePrefs({ ...prefs, theme: themeOption })}
+                    className={`rounded-lg px-2.5 py-1.5 text-[10px] font-semibold capitalize tracking-[0.04em] transition ${prefs.theme === themeOption ? 'bg-paper text-ink shadow-sm' : 'text-muted hover:text-paper'}`}
+                  >
+                    {themeOption}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="grid gap-6 p-5 md:grid-cols-[1.4fr_1fr]">
+            <div className="grid gap-7 p-5 sm:p-6 md:grid-cols-[1.4fr_1fr]">
               <div>
-                <label className="block font-mono text-[10.5px] uppercase tracking-[0.18em] text-faint">
+                <label className="block font-body text-sm font-bold tracking-[0.01em] text-muted">
                   hf token{' '}
                   <span className="ml-1 rounded-[3px] border border-rust/40 px-1.5 py-0.5 text-[9.5px] normal-case tracking-normal text-rust">
                     free
@@ -311,11 +370,11 @@ export default function RizzApp() {
                     onChange={(e) => setPrefs((p) => ({ ...p, token: e.target.value }))}
                     placeholder="hf_xxxxxxxx…"
                     autoComplete="off"
-                    className="w-full flex-1 rounded-[4px] border border-line bg-ink2 px-3.5 py-2.5 text-[13.5px] text-paper outline-none transition focus:border-rust placeholder:text-faint"
+                    className="w-full flex-1 rounded-[14px] border-2 border-line bg-ink2/80 px-3.5 py-3 text-[13.5px] text-paper outline-none transition focus:border-rust focus:ring-2 focus:ring-rust/10 placeholder:text-faint"
                   />
                   <button
                     onClick={() => savePrefs(prefs)}
-                    className="shrink-0 rounded-[4px] border border-line2 bg-panel2 px-4 font-mono text-[11px] uppercase tracking-[0.15em] text-paper transition hover:border-rust hover:text-rust"
+                    className="shrink-0 rounded-[14px] border-2 border-line2 bg-panel2 px-4 font-body text-[12px] font-bold text-paper transition hover:border-rust hover:text-rust"
                   >
                     save
                   </button>
@@ -326,7 +385,7 @@ export default function RizzApp() {
                 </p>
               </div>
               <div>
-                <label className="block font-mono text-[10.5px] uppercase tracking-[0.18em] text-faint">
+                <label className="block font-body text-sm font-bold tracking-[0.01em] text-muted">
                   model
                 </label>
                 <input
@@ -335,7 +394,7 @@ export default function RizzApp() {
                   onChange={(e) => setPrefs((p) => ({ ...p, model: e.target.value }))}
                   placeholder="deepseek-ai/DeepSeek-V3-0324"
                   spellCheck={false}
-                  className="mt-2 w-full rounded-[4px] border border-line bg-ink2 px-3.5 py-2.5 font-mono text-[12px] text-paper outline-none transition focus:border-rust placeholder:text-faint"
+                  className="mt-2 w-full rounded-[14px] border-2 border-line bg-ink2/80 px-3.5 py-3 font-body text-[12px] text-paper outline-none transition focus:border-rust focus:ring-2 focus:ring-rust/10 placeholder:text-faint"
                 />
                 <p className="mt-2 text-[12px] leading-relaxed text-faint">
                   Any chat model enabled on your HF account. Default:
@@ -343,7 +402,7 @@ export default function RizzApp() {
                 </p>
               </div>
             </div>
-            <div className="border-t border-line px-5 py-3 text-[12px] text-faint">
+            <div className="border-t border-line px-5 py-3.5 text-[12px] text-faint">
               Need a token?{' '}
               <a
                 href="https://huggingface.co/settings/tokens"
@@ -358,19 +417,19 @@ export default function RizzApp() {
         )}
 
         {/* editor */}
-        <section className="mt-10 border border-line bg-panel">
-          <div className="flex items-center justify-between border-b border-line px-5 py-3">
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
-              <span className="text-rust">01</span>&ensp;/&ensp;the text
+        <section className="animate-entrance animate-delay-4 mt-12 overflow-hidden rounded-[24px] border-2 border-line2/60 bg-panel shadow-[0_2px_0_rgb(var(--color-paper)_/_0.1)] sm:mt-14">
+          <div className="flex items-center justify-between border-b-2 border-line px-5 py-4">
+            <span className="font-head text-[15px] font-bold tracking-[-0.02em] text-paper">
+              the text
             </span>
             <button
               onClick={pasteFromClipboard}
-              className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted transition hover:text-rust"
+              className="rounded-lg px-2.5 py-1 font-body text-[11px] font-bold tracking-[0.03em] text-muted transition hover:bg-rust/10 hover:text-rust"
             >
               paste
             </button>
           </div>
-          <div className="p-5">
+          <div className="p-5 sm:p-6">
             <textarea
               ref={taRef}
               value={message}
@@ -388,12 +447,12 @@ export default function RizzApp() {
               maxLength={1000}
               placeholder="what they sent…"
               spellCheck
-              className="min-h-[96px] w-full resize-y rounded-[4px] border border-line bg-ink2 px-4 py-3.5 text-[15.5px] leading-relaxed text-paper outline-none transition focus:border-rust placeholder:text-faint"
+              className="min-h-[128px] w-full resize-y rounded-[18px] border-2 border-line bg-ink2/80 px-4 py-4 text-[16px] leading-relaxed text-paper outline-none transition placeholder:text-faint focus:border-rust focus:ring-4 focus:ring-rust/10"
             />
-            <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+            <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-wrap items-end gap-3.5">
                 <label>
-                  <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
+                  <span className="mb-2 block font-body text-[11px] font-bold tracking-[0.04em] text-muted/80">
                     reply in
                   </span>
                   <select
@@ -410,7 +469,7 @@ export default function RizzApp() {
                   </select>
                 </label>
                 <label>
-                  <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
+                  <span className="mb-2 block font-body text-[11px] font-bold tracking-[0.04em] text-muted/80">
                     versions
                   </span>
                   <select
@@ -431,7 +490,7 @@ export default function RizzApp() {
               <button
                 onClick={gen}
                 disabled={busy}
-                className="inline-flex items-center gap-2.5 rounded-[5px] bg-rust px-6 py-3.5 text-[15px] font-semibold text-ink transition hover:bg-[#ff6f4a] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2.5 rounded-[16px] border-2 border-rust bg-rust px-6 py-3.5 text-[14px] font-bold text-ink shadow-none transition hover:-translate-y-0.5 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
                 {busy ? (
                   <>
@@ -458,20 +517,20 @@ export default function RizzApp() {
                 )}
               </button>
             </div>
-            <p className="mt-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
+            <p className="mt-3.5 text-[11px] font-semibold tracking-[0.04em] text-faint">
               [enter] to generate · [shift]+[enter] for a new line
             </p>
           </div>
         </section>
 
         {/* results */}
-        <section className="mt-12">
-          <div className="mb-4 flex items-baseline justify-between border-b border-line pb-2.5">
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
-              <span className="text-rust">03</span>&ensp;/&ensp;your options
+        <section className="animate-entrance animate-delay-5 mt-16 sm:mt-20">
+          <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2 border-b border-line pb-3">
+            <span className="font-head text-[15px] font-bold tracking-[-0.02em] text-paper">
+              your options
             </span>
             {meta && (
-              <span className="font-mono text-[10.5px] uppercase tracking-[0.15em] text-faint">
+              <span className="text-[12px] font-semibold tracking-[0.02em] text-faint">
                 {meta}
               </span>
             )}
@@ -488,30 +547,29 @@ export default function RizzApp() {
               {replies.map((r, i) => (
                 <article
                   key={i}
-                  className="animate-fadeUp border border-line bg-panel transition hover:border-line2"
+                  className="animate-fadeUp overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.1)] transition hover:border-rust"
                   style={{ animationDelay: i * 60 + 'ms' }}
                 >
-                  <div className="flex items-center justify-between border-b border-line px-5 py-2.5">
-                    <span className="font-mono text-[13px] text-rust">{num(i)}</span>
-                    <span className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-paper/70">
+                  <div className="flex items-center justify-between border-b-2 border-line px-5 py-3.5">
+                    <span className="font-body text-[11px] font-bold tracking-[0.06em] text-paper/70">
                       {r.vibe}
                     </span>
                   </div>
-                  <div className="px-5 py-4">
+                  <div className="px-5 py-5">
                     <p className="whitespace-pre-wrap break-words text-[16px] leading-relaxed text-paper/90">
                       {r.reply}
                     </p>
                     <div className="mt-4 flex items-center gap-2">
                       <button
                         onClick={(e) => copy(r.reply, e.currentTarget)}
-                        className="rounded-[4px] border border-line2 px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.15em] text-muted transition hover:border-rust hover:text-paper"
+                        className="rounded-xl border-2 border-line2 px-3 py-1.5 font-body text-[11px] font-bold tracking-[0.03em] text-muted transition hover:border-rust hover:bg-rust/10 hover:text-paper"
                       >
                         <span data-copy-label>copy</span>
                       </button>
                       <button
                         onClick={() => swap(i, r.vibe, message.trim())}
                         disabled={!!swapping.current[i]}
-                        className="rounded-[4px] border border-line2 px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.15em] text-muted transition hover:border-rust hover:text-paper disabled:cursor-not-allowed disabled:opacity-60"
+                        className="rounded-xl border-2 border-line2 px-3 py-1.5 font-body text-[11px] font-bold text-muted transition hover:border-rust hover:bg-rust/10 hover:text-paper disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {swapping.current[i] ? 'replacing…' : 'replace'}
                       </button>
@@ -521,13 +579,13 @@ export default function RizzApp() {
               ))}
             </div>
           ) : (
-            <div className="border border-dashed border-line px-6 py-14 text-center">
-              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-faint">
+            <div className="relative overflow-hidden rounded-[24px] border-2 border-dashed border-line2/80 bg-panel/55 px-6 py-16 text-center shadow-[0_2px_0_rgb(var(--color-paper)_/_0.08)]">
+              <p className="font-head text-[15px] font-bold tracking-[-0.02em] text-muted">
                 awaiting input
               </p>
               <p className="mt-2.5 text-sm text-muted">
                 paste the message, hit{' '}
-                <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-paper">
+                <span className="font-body text-[12px] font-bold text-paper">
                   generate
                 </span>
                 .
@@ -537,22 +595,20 @@ export default function RizzApp() {
         </section>
 
         {/* footer */}
-        <footer className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-line py-6 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
-          <span>
-            rizzup <span className="text-rust">✳</span> 2026
+        <footer className="animate-entrance animate-delay-6 mt-20 flex flex-col items-start gap-3 border-t-2 border-line py-7 text-[11px] font-semibold tracking-[0.05em] text-faint sm:flex-row sm:items-center sm:justify-between">
+          <span className="font-head text-[13px] font-bold tracking-[-0.01em] text-paper">
+            rizzup 2026
           </span>
-          <span className="flex items-center gap-2">
-            free hf inference <span className="text-line2">·</span> nothing stored
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>free hf inference</span>
+            <span>nothing stored</span>
           </span>
         </footer>
       </main>
 
-      {/* grain */}
-      <div className="grain pointer-events-none fixed inset-0 z-30 opacity-[0.045]" aria-hidden />
-
       {/* toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-fadeUp border border-line border-l-2 border-l-rust bg-panel2 px-4 py-2.5 font-mono text-[11.5px] uppercase tracking-[0.12em] shadow-2xl">
+        <div className="fixed bottom-6 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-max -translate-x-1/2 animate-fadeUp rounded-xl border border-line border-l-2 border-l-rust bg-panel2 px-4 py-3 text-center font-body text-[11px] font-bold tracking-[0.04em] shadow-2xl">
           {toast.msg}
         </div>
       )}

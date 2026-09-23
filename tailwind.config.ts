@@ -9,17 +9,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: '#0b0a09',
-        ink2: '#111009',
-        panel: '#141210',
-        panel2: '#1a1714',
-        line: '#27241c',
-        line2: '#3a352b',
-        paper: '#f4f1ea',
-        muted: '#8a857a',
-        faint: '#5c584f',
-        rust: '#ff5a36',
-        gold: '#ffb454',
+        ink: 'rgb(var(--color-ink) / <alpha-value>)',
+        ink2: 'rgb(var(--color-ink2) / <alpha-value>)',
+        panel: 'rgb(var(--color-panel) / <alpha-value>)',
+        panel2: 'rgb(var(--color-panel2) / <alpha-value>)',
+        line: 'rgb(var(--color-line) / <alpha-value>)',
+        line2: 'rgb(var(--color-line2) / <alpha-value>)',
+        paper: 'rgb(var(--color-paper) / <alpha-value>)',
+        muted: 'rgb(var(--color-muted) / <alpha-value>)',
+        faint: 'rgb(var(--color-faint) / <alpha-value>)',
+        rust: 'rgb(var(--color-rust) / <alpha-value>)',
+        gold: 'rgb(var(--color-gold) / <alpha-value>)',
       },
       fontFamily: {
         body: ['var(--font-body)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
