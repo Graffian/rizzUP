@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
@@ -13,8 +13,8 @@ body {
 }
 
 ::selection {
-  background: #ff8b6b;
-  color: #101827;
+  background: #ee6d52;
+  color: #fffdf8;
 }
 
 @layer utilities {
@@ -52,6 +52,45 @@ body {
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+  @keyframes entrance {
+    from {
+      opacity: 0;
+      transform: translateY(18px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  .animate-entrance {
+    animation: entrance 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-delay-1 {
+    animation-delay: 80ms;
+  }
+  .animate-delay-2 {
+    animation-delay: 160ms;
+  }
+  .animate-delay-3 {
+    animation-delay: 260ms;
+  }
+  .animate-delay-4 {
+    animation-delay: 380ms;
+  }
+  .animate-delay-5 {
+    animation-delay: 500ms;
+  }
+  .animate-delay-6 {
+    animation-delay: 620ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-entrance,
+    .animate-fadeUp,
+    .animate-fadeIn,
+    .shimmer::after {
+      animation: none;
     }
   }
   @keyframes fadeIn {

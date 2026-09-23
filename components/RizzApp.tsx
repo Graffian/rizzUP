@@ -210,7 +210,7 @@ export default function RizzApp() {
     'cursor-pointer appearance-none rounded-xl border border-line bg-ink2/80 px-3.5 py-2.5 pr-8 font-mono text-[11px] uppercase tracking-[0.1em] text-paper outline-none transition hover:border-line2 focus:border-rust focus:ring-2 focus:ring-rust/10'
 
   const selectStyle = {
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a857a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23657078' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
     backgroundRepeat: 'no-repeat',
     backgroundPosition: 'right 9px center',
   } as const
@@ -228,7 +228,7 @@ export default function RizzApp() {
 
       <main className="relative z-10 mx-auto w-full max-w-[980px] px-5 py-6 sm:px-10 sm:py-10 lg:py-14">
         {/* header */}
-        <header className="flex items-center justify-between pb-2">
+        <header className="animate-entrance animate-delay-1 flex items-center justify-between pb-2">
           <div>
             <div className="inline-flex rounded-xl bg-[#202a31] px-3 py-2 shadow-sm">
               <img
@@ -264,23 +264,47 @@ export default function RizzApp() {
         </header>
 
         {/* hero */}
-        <section className="mt-16 max-w-3xl sm:mt-20">
-          <p className="mb-5 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-rust">better words, less overthinking</p>
-          <h1 className="max-w-2xl font-head text-[44px] font-bold leading-[0.98] tracking-[-0.045em] sm:text-[72px]">
-            Reply like you{' '}
-            <em className="font-serifit font-normal italic text-rust">mean it.</em>
-          </h1>
-          <p className="mt-6 max-w-xl text-[16px] leading-[1.65] text-muted">
-            Paste the message. Get a handful of replies that sound like you on a
-            good day — one to tease, one to charm, one to keep short. No pickup
-            lines. No cringe. Built on a free AI.
-          </p>
-          <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-semibold tracking-[0.1em] text-muted/80">
-            <span>13 languages</span>
-            <span className="text-rust">↯</span>
-            <span>enter to generate</span>
-            <span className="text-rust">↯</span>
-            <span>nothing stored</span>
+        <section className="mt-16 grid items-end gap-12 sm:mt-20 md:grid-cols-[minmax(0,1fr)_280px] md:gap-16">
+          <div className="animate-entrance animate-delay-2 max-w-3xl">
+            <p className="mb-5 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-rust">better words, less overthinking</p>
+            <h1 className="max-w-2xl font-head text-[44px] font-bold leading-[0.98] tracking-[-0.045em] sm:text-[72px]">
+              Reply like you{' '}
+              <em className="font-serifit font-normal italic text-rust">mean it.</em>
+            </h1>
+            <p className="mt-6 max-w-xl text-[16px] leading-[1.65] text-muted">
+              Paste the message. Get a handful of replies that sound like you on a
+              good day — one to tease, one to charm, one to keep short. No pickup
+              lines. No cringe. Built on a free AI.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-semibold tracking-[0.1em] text-muted/80">
+              <span>13 languages</span>
+              <span className="text-rust">↯</span>
+              <span>enter to generate</span>
+              <span className="text-rust">↯</span>
+              <span>nothing stored</span>
+            </div>
+          </div>
+          <div className="animate-entrance animate-delay-3 relative hidden overflow-hidden rounded-2xl border border-line bg-panel/70 p-5 shadow-[0_18px_50px_rgba(32,42,49,0.06)] md:block">
+            <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-rust/10 blur-2xl" />
+            <div className="relative">
+              <div className="flex items-center justify-between border-b border-line pb-4">
+                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted">your energy</span>
+                <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-rust">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rust" /> live
+                </span>
+              </div>
+              <p className="mt-5 font-head text-[21px] font-bold leading-tight tracking-[-0.03em] text-paper">
+                Specific beats smooth.
+              </p>
+              <p className="mt-2 text-[13px] leading-relaxed text-muted">
+                Pick a direction and we’ll find the words that sound like you.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <span className="rounded-full bg-rust px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-ink">playful</span>
+                <span className="rounded-full border border-line2 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">warm</span>
+                <span className="rounded-full border border-line2 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">direct</span>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -352,7 +376,7 @@ export default function RizzApp() {
         )}
 
         {/* editor */}
-        <section className="mt-12 overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_18px_50px_rgba(32,42,49,0.08)] sm:mt-14">
+        <section className="animate-entrance animate-delay-4 mt-12 overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_18px_50px_rgba(32,42,49,0.08)] sm:mt-14">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
               <span className="mr-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rust px-1.5 text-[9px] font-bold text-ink">01</span> the text
@@ -459,7 +483,7 @@ export default function RizzApp() {
         </section>
 
         {/* results */}
-        <section className="mt-16 sm:mt-20">
+        <section className="animate-entrance animate-delay-5 mt-16 sm:mt-20">
           <div className="mb-5 flex items-baseline justify-between border-b border-line pb-3">
             <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
               <span className="mr-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rust px-1.5 text-[9px] font-bold text-ink">03</span> your options
@@ -531,7 +555,7 @@ export default function RizzApp() {
         </section>
 
         {/* footer */}
-        <footer className="mt-20 flex flex-wrap items-center justify-between gap-3 border-t border-line py-7 text-[10px] font-semibold uppercase tracking-[0.12em] text-faint">
+        <footer className="animate-entrance animate-delay-6 mt-20 flex flex-wrap items-center justify-between gap-3 border-t border-line py-7 text-[10px] font-semibold uppercase tracking-[0.12em] text-faint">
           <span>
             rizzup <span className="text-rust">✳</span> 2026
           </span>
