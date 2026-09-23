@@ -233,19 +233,6 @@ export default function RizzApp() {
         </div>
       </div>
       <div className="fixed inset-0 -z-20 bg-ink" />
-      <div
-        className="fixed inset-0 -z-20"
-        style={{
-          background:
-            'radial-gradient(720px 480px at 92% -10%, rgb(var(--color-rust) / 0.12), transparent 64%), radial-gradient(620px 480px at -10% 105%, rgb(var(--color-gold) / 0.1), transparent 62%)',
-        }}
-      />
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <span className="absolute left-[7%] top-[18%] rotate-[-12deg] font-serifit text-4xl text-rust/70">✦</span>
-        <span className="absolute right-[9%] top-[38%] rotate-12 font-serifit text-5xl text-gold/80">♡</span>
-        <span className="absolute bottom-[16%] left-[5%] h-10 w-10 rotate-12 rounded-full border-2 border-dashed border-line2/60" />
-      </div>
-
       <main className="relative z-10 mx-auto w-full max-w-[980px] px-5 py-6 sm:px-10 sm:py-10 lg:py-14">
         {/* header */}
         <header className="animate-entrance animate-delay-1 flex items-center justify-between pb-2">
@@ -304,8 +291,7 @@ export default function RizzApp() {
               <span>nothing stored</span>
             </div>
           </div>
-          <div className="animate-entrance animate-delay-3 relative hidden -rotate-1 overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/80 p-5 shadow-[4px_6px_0_rgb(var(--color-line)_/_0.45)] md:block">
-            <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-rust/10 blur-2xl" />
+          <div className="animate-entrance animate-delay-3 relative hidden -rotate-1 overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/80 p-5 shadow-none md:block">
             <div className="relative">
               <div className="flex items-center justify-between border-b border-line pb-4">
                 <span className="font-body text-[11px] font-bold tracking-[0.08em] text-muted">your energy</span>
@@ -330,9 +316,9 @@ export default function RizzApp() {
 
         {/* settings */}
         {showSettings && (
-          <section className="mt-10 animate-fadeIn overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-[4px_6px_0_rgb(var(--color-line)_/_0.35)]">
+          <section className="mt-10 animate-fadeIn overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-none">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-5 py-3.5">
-              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+              <span className="font-head text-[15px] font-bold tracking-[-0.02em] text-paper">
                 api access
               </span>
               <div className="flex items-center gap-1 rounded-xl border-2 border-line bg-ink2/70 p-1">
@@ -349,7 +335,7 @@ export default function RizzApp() {
             </div>
             <div className="grid gap-7 p-5 sm:p-6 md:grid-cols-[1.4fr_1fr]">
               <div>
-                <label className="block font-mono text-[10.5px] uppercase tracking-[0.18em] text-faint">
+                <label className="block font-body text-sm font-bold tracking-[0.01em] text-muted">
                   hf token{' '}
                   <span className="ml-1 rounded-[3px] border border-rust/40 px-1.5 py-0.5 text-[9.5px] normal-case tracking-normal text-rust">
                     free
@@ -362,11 +348,11 @@ export default function RizzApp() {
                     onChange={(e) => setPrefs((p) => ({ ...p, token: e.target.value }))}
                     placeholder="hf_xxxxxxxx…"
                     autoComplete="off"
-                    className="w-full flex-1 rounded-xl border border-line bg-ink2/80 px-3.5 py-3 text-[13.5px] text-paper outline-none transition focus:border-rust focus:ring-2 focus:ring-rust/10 placeholder:text-faint"
+                    className="w-full flex-1 rounded-[14px] border-2 border-line bg-ink2/80 px-3.5 py-3 text-[13.5px] text-paper outline-none transition focus:border-rust focus:ring-2 focus:ring-rust/10 placeholder:text-faint"
                   />
                   <button
                     onClick={() => savePrefs(prefs)}
-                    className="shrink-0 rounded-xl border border-line2 bg-panel2 px-4 font-mono text-[10px] uppercase tracking-[0.14em] text-paper transition hover:border-rust hover:text-rust"
+                    className="shrink-0 rounded-[14px] border-2 border-line2 bg-panel2 px-4 font-body text-[12px] font-bold text-paper transition hover:border-rust hover:text-rust"
                   >
                     save
                   </button>
@@ -377,7 +363,7 @@ export default function RizzApp() {
                 </p>
               </div>
               <div>
-                <label className="block font-mono text-[10.5px] uppercase tracking-[0.18em] text-faint">
+                <label className="block font-body text-sm font-bold tracking-[0.01em] text-muted">
                   model
                 </label>
                 <input
@@ -386,7 +372,7 @@ export default function RizzApp() {
                   onChange={(e) => setPrefs((p) => ({ ...p, model: e.target.value }))}
                   placeholder="deepseek-ai/DeepSeek-V3-0324"
                   spellCheck={false}
-                  className="mt-2 w-full rounded-xl border border-line bg-ink2/80 px-3.5 py-3 font-mono text-[12px] text-paper outline-none transition focus:border-rust focus:ring-2 focus:ring-rust/10 placeholder:text-faint"
+                  className="mt-2 w-full rounded-[14px] border-2 border-line bg-ink2/80 px-3.5 py-3 font-body text-[12px] text-paper outline-none transition focus:border-rust focus:ring-2 focus:ring-rust/10 placeholder:text-faint"
                 />
                 <p className="mt-2 text-[12px] leading-relaxed text-faint">
                   Any chat model enabled on your HF account. Default:
@@ -409,7 +395,7 @@ export default function RizzApp() {
         )}
 
         {/* editor */}
-        <section className="animate-entrance animate-delay-4 mt-12 overflow-hidden rounded-[24px] border-2 border-line2/60 bg-panel shadow-[5px_7px_0_rgb(var(--color-line)_/_0.4)] sm:mt-14">
+        <section className="animate-entrance animate-delay-4 mt-12 overflow-hidden rounded-[24px] border-2 border-line2/60 bg-panel shadow-none sm:mt-14">
           <div className="flex items-center justify-between border-b-2 border-line px-5 py-4">
             <span className="font-head text-[15px] font-bold tracking-[-0.02em] text-paper">
               the text
@@ -482,7 +468,7 @@ export default function RizzApp() {
               <button
                 onClick={gen}
                 disabled={busy}
-                className="inline-flex items-center gap-2.5 rounded-[16px] border-2 border-rust bg-rust px-6 py-3.5 text-[14px] font-bold text-ink shadow-[3px_4px_0_rgb(var(--color-paper)_/_0.2)] transition hover:-translate-y-0.5 hover:shadow-[1px_2px_0_rgb(var(--color-paper)_/_0.2)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-2.5 rounded-[16px] border-2 border-rust bg-rust px-6 py-3.5 text-[14px] font-bold text-ink shadow-none transition hover:-translate-y-0.5 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {busy ? (
                   <>
@@ -522,7 +508,7 @@ export default function RizzApp() {
               your options
             </span>
             {meta && (
-              <span className="text-[11px] font-medium tracking-[0.08em] text-faint">
+              <span className="text-[12px] font-semibold tracking-[0.02em] text-faint">
                 {meta}
               </span>
             )}
@@ -539,7 +525,7 @@ export default function RizzApp() {
               {replies.map((r, i) => (
                 <article
                   key={i}
-                  className="animate-fadeUp overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-[4px_5px_0_rgb(var(--color-line)_/_0.3)] transition hover:-translate-y-0.5 hover:border-rust hover:shadow-[4px_7px_0_rgb(var(--color-line)_/_0.3)]"
+                  className="animate-fadeUp overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-none transition hover:border-rust"
                   style={{ animationDelay: i * 60 + 'ms' }}
                 >
                   <div className="flex items-center justify-between border-b-2 border-line px-5 py-3.5">
@@ -562,7 +548,7 @@ export default function RizzApp() {
                       <button
                         onClick={() => swap(i, r.vibe, message.trim())}
                         disabled={!!swapping.current[i]}
-                        className="rounded-lg border border-line2 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted transition hover:border-rust hover:bg-rust/10 hover:text-paper disabled:cursor-not-allowed disabled:opacity-60"
+                        className="rounded-xl border-2 border-line2 px-3 py-1.5 font-body text-[11px] font-bold text-muted transition hover:border-rust hover:bg-rust/10 hover:text-paper disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {swapping.current[i] ? 'replacing…' : 'replace'}
                       </button>
@@ -572,14 +558,14 @@ export default function RizzApp() {
               ))}
             </div>
           ) : (
-            <div className="relative overflow-hidden rounded-[24px] border-2 border-dashed border-line2/80 bg-panel/55 px-6 py-16 text-center shadow-[3px_4px_0_rgb(var(--color-line)_/_0.2)]">
+            <div className="relative overflow-hidden rounded-[24px] border-2 border-dashed border-line2/80 bg-panel/55 px-6 py-16 text-center shadow-none">
               <span aria-hidden className="absolute right-8 top-5 rotate-12 font-serifit text-3xl text-gold/70">✦</span>
               <p className="font-head text-[15px] font-bold tracking-[-0.02em] text-muted">
                 awaiting input
               </p>
               <p className="mt-2.5 text-sm text-muted">
                 paste the message, hit{' '}
-                <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-paper">
+                <span className="font-body text-[12px] font-bold text-paper">
                   generate
                 </span>
                 .
@@ -590,7 +576,7 @@ export default function RizzApp() {
 
         {/* footer */}
         <footer className="animate-entrance animate-delay-6 mt-20 flex flex-wrap items-center justify-between gap-3 border-t-2 border-line py-7 text-[11px] font-semibold tracking-[0.05em] text-faint">
-          <span>
+          <span className="font-head text-[13px] font-bold tracking-[-0.01em] text-paper">
             rizzup <span className="text-rust">✳</span> 2026
           </span>
           <span className="flex items-center gap-2">
