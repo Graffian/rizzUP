@@ -222,21 +222,22 @@ export default function RizzApp() {
         className="fixed inset-0 -z-20"
         style={{
           background:
-            'radial-gradient(720px 480px at 92% -10%, rgba(255,139,107,0.13), transparent 64%), radial-gradient(620px 480px at -10% 105%, rgba(243,201,105,0.07), transparent 62%)',
+            'radial-gradient(720px 480px at 92% -10%, rgba(238,109,82,0.11), transparent 64%), radial-gradient(620px 480px at -10% 105%, rgba(220,174,63,0.08), transparent 62%)',
         }}
       />
-      <div aria-hidden className="pointer-events-none fixed -right-32 -top-32 -z-10 h-[460px] w-[460px] rounded-full border border-paper/[0.06] sm:h-[620px] sm:w-[620px]" />
 
       <main className="relative z-10 mx-auto w-full max-w-[980px] px-5 py-6 sm:px-10 sm:py-10 lg:py-14">
         {/* header */}
         <header className="flex items-center justify-between pb-2">
           <div>
-            <img
-              src="/rizzup-wordmark-128h.png"
-              srcSet="/rizzup-wordmark-256h.png 2x, /rizzup-wordmark-512h.png 4x"
-              alt="RizzUp"
-              className="h-10 w-auto select-none sm:h-11"
-            />
+            <div className="inline-flex rounded-xl bg-[#202a31] px-3 py-2 shadow-sm">
+              <img
+                src="/rizzup-wordmark-128h.png"
+                srcSet="/rizzup-wordmark-256h.png 2x, /rizzup-wordmark-512h.png 4x"
+                alt="RizzUp"
+                className="h-7 w-auto select-none sm:h-8"
+              />
+            </div>
             <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted/70">
               a wingman in your pocket
             </p>
@@ -264,7 +265,7 @@ export default function RizzApp() {
 
         {/* hero */}
         <section className="mt-16 max-w-3xl sm:mt-20">
-          <p className="mb-5 font-mono text-[10px] uppercase tracking-[0.22em] text-rust">better words, less overthinking</p>
+          <p className="mb-5 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-rust">better words, less overthinking</p>
           <h1 className="max-w-2xl font-head text-[44px] font-bold leading-[0.98] tracking-[-0.045em] sm:text-[72px]">
             Reply like you{' '}
             <em className="font-serifit font-normal italic text-rust">mean it.</em>
@@ -274,7 +275,7 @@ export default function RizzApp() {
             good day — one to tease, one to charm, one to keep short. No pickup
             lines. No cringe. Built on a free AI.
           </p>
-          <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted/75">
+          <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-semibold tracking-[0.1em] text-muted/80">
             <span>13 languages</span>
             <span className="text-rust">↯</span>
             <span>enter to generate</span>
@@ -286,7 +287,7 @@ export default function RizzApp() {
         {/* settings */}
         {showSettings && (
           <section className="mt-10 animate-fadeIn overflow-hidden rounded-2xl border border-line bg-panel/90 shadow-2xl shadow-black/10">
-            <div className="border-b border-line px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
+            <div className="border-b border-line px-5 py-3.5 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
               <span className="text-rust">02</span>&ensp;/&ensp;api access
             </div>
             <div className="grid gap-7 p-5 sm:p-6 md:grid-cols-[1.4fr_1fr]">
@@ -351,9 +352,9 @@ export default function RizzApp() {
         )}
 
         {/* editor */}
-        <section className="mt-12 overflow-hidden rounded-2xl border border-line bg-panel shadow-2xl shadow-black/10 sm:mt-14">
+        <section className="mt-12 overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_18px_50px_rgba(32,42,49,0.08)] sm:mt-14">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
               <span className="mr-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rust px-1.5 text-[9px] font-bold text-ink">01</span> the text
             </span>
             <button
@@ -460,11 +461,11 @@ export default function RizzApp() {
         {/* results */}
         <section className="mt-16 sm:mt-20">
           <div className="mb-5 flex items-baseline justify-between border-b border-line pb-3">
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
               <span className="mr-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rust px-1.5 text-[9px] font-bold text-ink">03</span> your options
             </span>
             {meta && (
-              <span className="font-mono text-[10.5px] uppercase tracking-[0.15em] text-faint">
+              <span className="text-[11px] font-medium tracking-[0.08em] text-faint">
                 {meta}
               </span>
             )}
@@ -515,7 +516,7 @@ export default function RizzApp() {
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-line2/80 bg-panel/40 px-6 py-16 text-center">
-              <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-faint">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-faint">
                 awaiting input
               </p>
               <p className="mt-2.5 text-sm text-muted">
@@ -530,7 +531,7 @@ export default function RizzApp() {
         </section>
 
         {/* footer */}
-        <footer className="mt-20 flex flex-wrap items-center justify-between gap-3 border-t border-line py-7 font-mono text-[10px] uppercase tracking-[0.15em] text-faint">
+        <footer className="mt-20 flex flex-wrap items-center justify-between gap-3 border-t border-line py-7 text-[10px] font-semibold uppercase tracking-[0.12em] text-faint">
           <span>
             rizzup <span className="text-rust">✳</span> 2026
           </span>
@@ -539,9 +540,6 @@ export default function RizzApp() {
           </span>
         </footer>
       </main>
-
-      {/* grain */}
-      <div className="grain pointer-events-none fixed inset-0 z-30 opacity-[0.045]" aria-hidden />
 
       {/* toast */}
       {toast && (
