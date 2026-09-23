@@ -323,16 +323,16 @@ export default function RizzApp() {
 
         <section className="animate-entrance animate-delay-3 mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="rounded-[18px] border-2 border-line bg-panel/75 p-4 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.08)] sm:p-5">
-            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">13 languages</p>
-            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">Keep your voice, wherever the conversation goes.</p>
+            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">Start with context</p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">Paste the message as it happened for a more natural reply.</p>
           </div>
           <div className="rounded-[18px] border-2 border-line bg-panel/75 p-4 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.08)] sm:p-5">
-            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">Three versions</p>
-            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">A few good directions, so one feels like you.</p>
+            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">Keep it yours</p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">Use each draft as a starting point, then make it sound like you.</p>
           </div>
           <div className="rounded-[18px] border-2 border-line bg-panel/75 p-4 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.08)] sm:p-5">
-            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">Nothing stored</p>
-            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">Your message stays yours while you find the words.</p>
+            <p className="font-head text-[16px] font-bold tracking-[-0.02em] text-paper">Ready when you are</p>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-muted">Press enter to generate, or use shift + enter for a new line.</p>
           </div>
         </section>
 
