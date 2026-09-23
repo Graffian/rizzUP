@@ -239,10 +239,12 @@ export default function RizzApp() {
         {/* header */}
         <header className="flex items-end justify-between border-b border-line pb-4">
           <div>
-            <div className="flex items-center gap-2.5 font-mono text-[13px] font-bold uppercase tracking-[0.3em] text-paper">
-              rizzup
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-rust" />
-            </div>
+            <img
+              src="/rizzup-wordmark-128h.png"
+              srcSet="/rizzup-wordmark-256h.png 2x, /rizzup-wordmark-512h.png 4x"
+              alt="RizzUp"
+              className="h-12 w-auto select-none sm:h-14"
+            />
             <p className="mt-1.5 font-mono text-[10.5px] uppercase tracking-[0.22em] text-faint">
               a wingman in your pocket
             </p>

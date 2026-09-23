@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SYSTEM_PROMPT } from '@/lib/ai'
+import { SYSTEM_PROMPT, languageLabel, looksLikeHinglish } from '@/lib/ai'
 import { DEFAULT_MODEL, hfChat } from '@/lib/hf'
 
 export const runtime = 'nodejs'
@@ -28,21 +28,22 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const langLine = !language || language === 'auto' ? 'the same language she wrote in' : language
-  const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    {
-      role: 'user',
-      content: `The message:
+  const hinglishMode = language === 'Hinglish' || looksLikeHinglish(message)
+  const langLine = !language || language === 'auto' ? 'the same language she wrote in' : languageLabel(language)
+  const buildSwapPrompt = (extra = '') =>
+    `The message:
 """
 ${message}
 """
 
 Reply language: ${langLine}
 Vibe you must use: ${vibe}
+${extra}
+Write exactly one reply with that vibe. Reply with ONLY the reply text — no quotes, no labels, no explanation.`
 
-Write exactly one reply with that vibe. Reply with ONLY the reply text — no quotes, no labels, no explanation.`,
-    },
+  const messages = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'user', content: buildSwapPrompt() },
   ]
 
   try {
@@ -52,6 +53,30 @@ Write exactly one reply with that vibe. Reply with ONLY the reply text — no qu
     if (!reply) {
       return NextResponse.json({ error: 'Model returned no text.' }, { status: 502 })
     }
+
+    if (hinglishMode && !looksLikeHinglish(reply)) {
+      try {
+        const retry = await hfChat(
+          token,
+          model,
+          [
+            { role: 'system', content: SYSTEM_PROMPT },
+            {
+              role: 'user',
+              content: buildSwapPrompt(
+                'The previous reply was in the wrong language. Rewrite it so the ENTIRE reply is in Hinglish (Roman/Latin script, natural Hindi-English mix — never Devanagari).'
+              ),
+            },
+          ],
+          3
+        )
+        const fixed = retry.text.trim().replace(/^("|'|«|“)|("|'|»|”)$/g, '').trim()
+        if (fixed && looksLikeHinglish(fixed)) reply = fixed
+      } catch {
+        // keep original reply if the retry fails
+      }
+    }
+
     return NextResponse.json({ model: usedModel, reply })
   } catch (e: any) {
     const status = e?.status && e.status >= 400 && e.status <= 599 ? e.status : 500

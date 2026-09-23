@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { VIBES, buildMessages, parseReplies } from '@/lib/ai'
+import { VIBES, buildFixMessages, buildMessages, looksLikeHinglish, parseReplies } from '@/lib/ai'
 import { DEFAULT_MODEL, hfChat } from '@/lib/hf'
 
 export const runtime = 'nodejs'
@@ -30,13 +30,33 @@ export async function POST(req: NextRequest) {
   }
 
   const vibes = VIBES.slice(0, count)
+  const hinglishMode = language === 'Hinglish' || looksLikeHinglish(message)
   try {
     const { text, model: usedModel } = await hfChat(
       token,
       model,
       buildMessages(message, language, vibes)
     )
-    const replies = parseReplies(text, vibes)
+    let replies = parseReplies(text, vibes)
+
+    if (hinglishMode && replies.length) {
+      replies = replies.filter((r) => looksLikeHinglish(r.reply))
+      for (let round = 0; round < 2 && replies.length < vibes.length; round++) {
+        const missing = vibes.filter((v) => !replies.some((r) => r.vibe === v))
+        try {
+          const fixed = await hfChat(token, model, buildFixMessages(message, 'Hinglish', missing))
+          const fixedReplies = parseReplies(fixed.text, missing).filter((r) =>
+            looksLikeHinglish(r.reply)
+          )
+          replies = vibes
+            .map((v) => replies.find((r) => r.vibe === v) || fixedReplies.find((r) => r.vibe === v))
+            .filter((r): r is { vibe: string; reply: string } => !!r)
+        } catch {
+          break
+        }
+      }
+    }
+
     if (!replies.length) {
       return NextResponse.json(
         { error: 'Could not parse model output. Try again.' },

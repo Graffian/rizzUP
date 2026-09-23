@@ -21,6 +21,42 @@ Rules:
 8. Always write in the language the user specifies (or the language of her message if not specified).
 9. Hinglish rule: if the message is Hinglish (Roman-script Hindi mixed with English) or the user selects Hinglish, ALWAYS reply in Roman/Latin script — a natural Hindi-English mix like "kya kar rahi ho?" — never in Devanagari script. Use Devanagari only if the user explicitly asks for pure Hindi.`
 
+const HINGLISH_WORDS = [
+  'aaj', 'aana', 'aap', 'aapka', 'aapki', 'aapko', 'aata', 'aate', 'aati', 'aaya', 'aaye', 'aayi',
+  'abhi', 'acha', 'accha', 'achha', 'achhe', 'agar', 'apna', 'apne', 'apni', 'arey', 'arre',
+  'baap', 'baat', 'bada', 'bahut', 'bata', 'batao', 'behen', 'bhai', 'bhi', 'bohat', 'bolo',
+  'chahta', 'chahte', 'chahti', 'chahiye', 'chai', 'chalo', 'cheez', 'dikh', 'dil', 'ek',
+  'fir', 'gaya', 'gaye', 'gayi', 'hai', 'hain', 'ho', 'hogaya', 'hoga', 'hua', 'hue', 'hui',
+  'hum', 'humko', 'jaata', 'jaate', 'jaati', 'jab', 'jaldi', 'kaise', 'kaisa', 'kaisi', 'kab',
+  'kahan', 'kal', 'kar', 'karke', 'karna', 'karo', 'karta', 'karte', 'karti', 'khatam', 'khushi',
+  'kiya', 'kiye', 'koi', 'kuch', 'kuchh', 'kyunki', 'kyu', 'kyun', 'kya', 'main', 'mast',
+  'maza', 'mazaa', 'mera', 'mere', 'meri', 'mujhe', 'mujhko', 'nahi', 'nahin', 'naa', 'pehle',
+  'pehli', 'phir', 'pura', 'pyar', 'pyaar', 'raha', 'rahe', 'rahi', 'raho', 'sab', 'sabse',
+  'samajh', 'shaam', 'socha', 'sochte', 'sun', 'suno', 'tha', 'the', 'theek', 'thi', 'thik',
+  'toh', 'tum', 'tumhara', 'tumhari', 'waala', 'wala', 'wali', 'woh', 'yaar', 'zaroor', 'zyada',
+]
+
+export function looksLikeHinglish(text: string | null | undefined) {
+  const t = String(text || '').trim()
+  if (!t) return false
+  if (/\p{Script=Devanagari}/u.test(t)) return false
+  const words = new Set(
+    t
+      .toLowerCase()
+      .replace(/[^a-z\s]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean)
+  )
+  for (const w of words) if (HINGLISH_WORDS.includes(w)) return true
+  return false
+}
+
+export function languageLabel(language: string) {
+  return language === 'Hinglish'
+    ? 'Hinglish (Roman/Latin script, natural Hindi-English mix — never Devanagari)'
+    : language
+}
+
 export function extractJSON(text: string | null | undefined) {
   if (!text) return null
   let t = String(text)
@@ -63,14 +99,18 @@ export function parseReplies(raw: string, vibes: string[]) {
 }
 
 export function buildUserPrompt(message: string, language: string, vibes: string[]) {
-  const langLine = !language || language === 'auto' ? 'the same language she wrote in' : language
+  const specific = !!language && language !== 'auto'
+  const langLine = specific ? languageLabel(language) : 'the same language she wrote in'
   const list = vibes.map((v, i) => `${i + 1}. ${v}`).join('\n')
+  const languageBars = specific
+    ? `\n\nCRITICAL: Every one of the ${vibes.length} replies MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if a reply comes out in the wrong language, rewrite the whole reply before including it.`
+    : ''
   return `The message:
 """
 ${message}
 """
 
-Reply language: ${langLine}
+Reply language: ${langLine}${languageBars}
 
 Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every item must look exactly like this:
 {"vibe":"<the vibe>","reply":"<the reply text>"}
@@ -79,6 +119,31 @@ Vibes in order:
 ${list}
 
 Here is the JSON array:`
+}
+
+export function buildFixMessages(message: string, language: string, vibes: string[]) {
+  const langLine = languageLabel(language)
+  const list = vibes.map((v, i) => `${i + 1}. ${v}`).join('\n')
+  return [
+    { role: 'system', content: SYSTEM_PROMPT },
+    {
+      role: 'user',
+      content: `The message:
+"""
+${message}
+"""
+
+Some of the reply options came out in the wrong language. Rewrite ONLY the vibes listed below, and make sure the ENTIRE text of every reply is written in ${langLine}. No reply may be written fully in English, Devanagari, or any other language.
+
+Return ONLY a JSON array, in the order listed, shaped exactly like this:
+{"vibe":"<the vibe>","reply":"<the reply text>"}
+
+Vibes to rewrite:
+${list}
+
+Here is the JSON array:`,
+    },
+  ] as Array<{ role: string; content: string }>
 }
 
 export function buildMessages(message: string, language: string, vibes: string[]) {
