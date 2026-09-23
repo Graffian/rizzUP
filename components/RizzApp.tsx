@@ -292,7 +292,7 @@ export default function RizzApp() {
 
         {/* settings */}
         {showSettings && (
-          <section className="mt-10 animate-fadeIn overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-none">
+          <section className="mt-10 animate-fadeIn overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.1)]">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-5 py-3.5">
               <span className="font-head text-[15px] font-bold tracking-[-0.02em] text-paper">
                 api access
@@ -371,7 +371,7 @@ export default function RizzApp() {
         )}
 
         {/* editor */}
-        <section className="animate-entrance animate-delay-4 mt-12 overflow-hidden rounded-[24px] border-2 border-line2/60 bg-panel shadow-none sm:mt-14">
+        <section className="animate-entrance animate-delay-4 mt-12 overflow-hidden rounded-[24px] border-2 border-line2/60 bg-panel shadow-[0_2px_0_rgb(var(--color-paper)_/_0.1)] sm:mt-14">
           <div className="flex items-center justify-between border-b-2 border-line px-5 py-4">
             <span className="font-head text-[15px] font-bold tracking-[-0.02em] text-paper">
               the text
@@ -501,7 +501,7 @@ export default function RizzApp() {
               {replies.map((r, i) => (
                 <article
                   key={i}
-                  className="animate-fadeUp overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-none transition hover:border-rust"
+                  className="animate-fadeUp overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.1)] transition hover:border-rust"
                   style={{ animationDelay: i * 60 + 'ms' }}
                 >
                   <div className="flex items-center justify-between border-b-2 border-line px-5 py-3.5">
@@ -534,7 +534,7 @@ export default function RizzApp() {
               ))}
             </div>
           ) : (
-            <div className="relative overflow-hidden rounded-[24px] border-2 border-dashed border-line2/80 bg-panel/55 px-6 py-16 text-center shadow-none">
+            <div className="relative overflow-hidden rounded-[24px] border-2 border-dashed border-line2/80 bg-panel/55 px-6 py-16 text-center shadow-[0_2px_0_rgb(var(--color-paper)_/_0.08)]">
               <p className="font-head text-[15px] font-bold tracking-[-0.02em] text-muted">
                 awaiting input
               </p>
