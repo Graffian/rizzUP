@@ -19,7 +19,8 @@ Rules:
 6. End with a light, easy-to-answer hook when it feels natural, so the conversation keeps moving.
 7. Match her energy: short message → short reply. Playful message → play along.
 8. Always write in the language the user specifies (or the language of her message if not specified).
-9. Hinglish rule: if the message is Hinglish (Roman-script Hindi mixed with English) or the user selects Hinglish, ALWAYS reply in Roman/Latin script — a natural Hindi-English mix like "kya kar rahi ho?" — never in Devanagari script. Use Devanagari only if the user explicitly asks for pure Hindi.`
+9. Hinglish rule: if the message is Hinglish (Roman-script Hindi mixed with English) or the user selects Hinglish, ALWAYS reply in Roman/Latin script — a natural Hindi-English mix like "kya kar rahi ho?" — never in Devanagari script. Use Devanagari only if the user explicitly asks for pure Hindi.
+10. Short/generic messages: if her message is very short or just a greeting/filler (like "hi", "hey", "hello", "hy", "yo", "sup", "hmm", "okay", "ok", "lol", "k", "loL"), reply like a real, casually flirty person — short, warm, easy, under 10 words. Something like "hey, what's up?" or "hey, missed your voice." Never formal, never surprised, never dramatic — no "what's the occasion", no "this honor", no royal-treatment theatrics. Just a smooth, natural opener that keeps the convo alive.`
 
 const HINGLISH_WORDS = [
   'aaj', 'aana', 'aap', 'aapka', 'aapki', 'aapko', 'aata', 'aate', 'aati', 'aaya', 'aaye', 'aayi',
@@ -105,12 +106,15 @@ export function buildUserPrompt(message: string, language: string, vibes: string
   const languageBars = specific
     ? `\n\nCRITICAL: Every one of the ${vibes.length} replies MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if a reply comes out in the wrong language, rewrite the whole reply before including it.`
     : ''
+  const shortNote = message.trim().split(/\s+/).length <= 2 && message.trim().length <= 15
+    ? '\n\nThis message is very short. Reply short, casual and lightly flirty, like two people already comfortable with each other — never formal or surprised.'
+    : ''
   return `The message:
 """
 ${message}
 """
 
-Reply language: ${langLine}${languageBars}
+Reply language: ${langLine}${languageBars}${shortNote}
 
 Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every item must look exactly like this:
 {"vibe":"<the vibe>","reply":"<the reply text>"}

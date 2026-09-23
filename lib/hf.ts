@@ -1,5 +1,3 @@
-import { getOptionalRequestContext } from '@cloudflare/next-on-pages'
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export class HFError extends Error {
@@ -11,27 +9,17 @@ export class HFError extends Error {
   }
 }
 
-export async function readEnv(key: string): Promise<string | undefined> {
-  const local = process.env[key]
-  if (local !== undefined && local !== null && local !== '') return local
-  try {
-    const rctx = getOptionalRequestContext()
-    if (rctx) {
-      const val = (rctx.env as Record<string, unknown>)[key]
-      if (val !== undefined && val !== null && String(val) !== '') return String(val)
-    }
-  } catch {
-    // No Cloudflare request context (local dev / Netlify) → nothing else to try.
-  }
-  return undefined
+export function readEnv(key: string): string | undefined {
+  const val = process.env[key]
+  return val && String(val).trim() !== '' ? String(val) : undefined
 }
 
-export async function hfUrl(): Promise<string> {
-  return (await readEnv('HF_URL')) || 'https://router.huggingface.co/v1/chat/completions'
+export function hfUrl(): string {
+  return readEnv('HF_URL') || 'https://router.huggingface.co/v1/chat/completions'
 }
 
-export async function defaultModel(): Promise<string> {
-  return (await readEnv('HF_MODEL')) || 'deepseek-ai/DeepSeek-V3-0324'
+export function defaultModel(): string {
+  return readEnv('HF_MODEL') || 'deepseek-ai/DeepSeek-V3-0324'
 }
 
 export async function hfChat(
@@ -40,7 +28,7 @@ export async function hfChat(
   messages: Array<{ role: string; content: string }>,
   maxTries = 4
 ) {
-  const url = await hfUrl()
+  const url = hfUrl()
   let lastStatus = 0
   let lastNetworkError = ''
   const payload: Record<string, any> = {
