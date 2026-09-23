@@ -30,9 +30,9 @@ const mono = Space_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'RizzUp — text her back like you mean it',
+  title: 'RizzUp — reply like you mean it',
   description:
-    'Paste what she sent. Get a handful of smooth, specific replies — no pickup lines, no cringe.',
+    'Paste the message. Get a handful of smooth, specific replies — no pickup lines, no cringe.',
 }
 
 export default function RootLayout({

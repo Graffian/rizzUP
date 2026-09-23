@@ -65,7 +65,7 @@ export function parseReplies(raw: string, vibes: string[]) {
 export function buildUserPrompt(message: string, language: string, vibes: string[]) {
   const langLine = !language || language === 'auto' ? 'the same language she wrote in' : language
   const list = vibes.map((v, i) => `${i + 1}. ${v}`).join('\n')
-  return `Her message:
+  return `The message:
 """
 ${message}
 """

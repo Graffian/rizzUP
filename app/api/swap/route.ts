@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     { role: 'system', content: SYSTEM_PROMPT },
     {
       role: 'user',
-      content: `Her message:
+      content: `The message:
 """
 ${message}
 """

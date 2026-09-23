@@ -119,7 +119,7 @@ export default function RizzApp() {
     if (busy) return
     const msg = message.trim()
     if (!msg) {
-      showToast('paste her message first', true)
+      showToast('paste a message first', true)
       taRef.current?.focus()
       return
     }
@@ -271,11 +271,11 @@ export default function RizzApp() {
         {/* hero */}
         <section className="mt-12 max-w-2xl sm:mt-16">
           <h1 className="font-head text-[40px] font-bold leading-[1.02] tracking-[-0.03em] sm:text-[60px]">
-            Text her back like you{' '}
+            Reply like you{' '}
             <em className="font-serifit font-normal italic text-rust">mean it.</em>
           </h1>
           <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted">
-            Paste what she sent. Get a handful of replies that sound like you on a
+            Paste the message. Get a handful of replies that sound like you on a
             good day — one to tease, one to charm, one to keep short. No pickup
             lines. No cringe. Built on a free AI.
           </p>
@@ -359,7 +359,7 @@ export default function RizzApp() {
         <section className="mt-10 border border-line bg-panel">
           <div className="flex items-center justify-between border-b border-line px-5 py-3">
             <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
-              <span className="text-rust">01</span>&ensp;/&ensp;her message
+              <span className="text-rust">01</span>&ensp;/&ensp;the text
             </span>
             <button
               onClick={pasteFromClipboard}
@@ -384,7 +384,7 @@ export default function RizzApp() {
               }}
               rows={3}
               maxLength={1000}
-              placeholder="what she sent…"
+              placeholder="what they sent…"
               spellCheck
               className="min-h-[96px] w-full resize-y rounded-[4px] border border-line bg-ink2 px-4 py-3.5 text-[15.5px] leading-relaxed text-paper outline-none transition focus:border-rust placeholder:text-faint"
             />
@@ -524,7 +524,7 @@ export default function RizzApp() {
                 awaiting input
               </p>
               <p className="mt-2.5 text-sm text-muted">
-                paste her message, hit{' '}
+                paste the message, hit{' '}
                 <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-paper">
                   generate
                 </span>

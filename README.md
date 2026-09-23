@@ -1,6 +1,6 @@
 # RizzUp
 
-Paste what she sent. Get a handful of replies that sound like you on a good day — one to tease, one to charm, one to keep short. No pickup lines. No cringe. Built on a free AI.
+Paste the message. Get a handful of replies that sound like you on a good day — one to tease, one to charm, one to keep short. No pickup lines. No cringe. Built on a free AI.
 
 ## Stack
 
@@ -14,7 +14,7 @@ Paste what she sent. Get a handful of replies that sound like you on a good day 
 - **Swap** any single reply without regenerating the whole batch
 - **Copy** any reply in one click
 - **13 languages** + Hinglish (Roman-script Hindi, never Devanagari unless asked) + auto-detect mode
-- Anti-cringe prompt rules: no pickup lines, no generic compliments, no emoji spam, replies are specific to her message
+- Anti-cringe prompt rules: no pickup lines, no generic compliments, no emoji spam, replies are specific to the message
 - Token configurable via **Settings panel** or **`.env`** — nothing is stored server-side
 
 ## Getting started
