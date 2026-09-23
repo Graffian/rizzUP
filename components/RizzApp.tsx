@@ -253,10 +253,36 @@ export default function RizzApp() {
               a wingman in your pocket
             </p>
           </div>
-          <button
-            onClick={() => setShowSettings((v) => !v)}
-            className="flex items-center gap-2 rounded-[14px] border-2 border-line2/70 bg-panel/80 px-3.5 py-2 font-body text-[11px] font-bold tracking-[0.03em] text-muted transition hover:border-rust hover:bg-rust/10 hover:text-paper"
-          >
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => savePrefs({ ...prefs, theme: prefs.theme === 'dark' ? 'light' : 'dark' })}
+              aria-label={prefs.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="flex h-10 w-10 items-center justify-center rounded-[14px] border-2 border-line2/70 bg-panel/80 text-muted transition hover:border-rust hover:bg-rust/10 hover:text-paper"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+                aria-hidden
+              >
+                {prefs.theme === 'dark' ? (
+                  <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.7 6.7 0 0 0 21 12.8Z" />
+                ) : (
+                  <>
+                    <circle cx="12" cy="12" r="3.5" />
+                    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                  </>
+                )}
+              </svg>
+            </button>
+            <button
+              onClick={() => setShowSettings((v) => !v)}
+              className="flex items-center gap-2 rounded-[14px] border-2 border-line2/70 bg-panel/80 px-3.5 py-2 font-body text-[11px] font-bold tracking-[0.03em] text-muted transition hover:border-rust hover:bg-rust/10 hover:text-paper"
+            >
             <span className="hidden sm:inline">{showSettings ? 'close' : 'settings'}</span>
             <svg
               viewBox="0 0 24 24"
@@ -271,7 +297,8 @@ export default function RizzApp() {
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
-          </button>
+            </button>
+          </div>
         </header>
 
         {/* hero */}
