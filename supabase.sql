@@ -80,6 +80,11 @@ security definer
 set search_path = public
 as $$
 begin
+  if nullif(p_device_id, '') is not null then
+    insert into users (device_id) values (p_device_id)
+    on conflict (device_id) do nothing;
+  end if;
+
   insert into subscriptions (
     dodo_subscription_id, device_id, status, active, current_period_end, email, updated_at
   ) values (

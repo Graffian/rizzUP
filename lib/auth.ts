@@ -62,6 +62,9 @@ export type SubscriptionPatch = {
 export async function upsertSubscription(patch: SubscriptionPatch): Promise<void> {
   if (!supabase) return
   try {
+    if (patch.deviceId) {
+      await getAccessInfo(patch.deviceId, '')
+    }
     await supabase.rpc('upsert_subscription', {
       p_sub_id: patch.subId,
       p_device_id: patch.deviceId || '',
