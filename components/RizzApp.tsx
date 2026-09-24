@@ -24,7 +24,6 @@ type Access = {
   active: boolean
   trialUsed: number
   trialLimit: number
-  price?: string
 }
 
 const initialAccess: Access = {
@@ -33,6 +32,19 @@ const initialAccess: Access = {
   active: true,
   trialUsed: 0,
   trialLimit: 3,
+}
+
+function localizedPrice(): string {
+  if (typeof window === 'undefined') return '$6'
+  let currency = 'USD'
+  try {
+    currency =
+      Intl.NumberFormat(window.navigator.language).resolvedOptions().currency ||
+      'USD'
+  } catch {
+    currency = 'USD'
+  }
+  return currency === 'INR' ? '₹499' : '$6'
 }
 
 function getDeviceId(): string {
@@ -213,7 +225,6 @@ export default function RizzApp() {
         active: d.active === true,
         trialUsed: d.trialUsed ?? 0,
         trialLimit: d.trialLimit ?? 3,
-        price: d.price,
       })
       return d.active === true
     } catch {
@@ -1049,7 +1060,7 @@ export default function RizzApp() {
               </p>
               <div className="mt-4 flex items-baseline gap-1.5">
                 <span className="font-head text-[34px] font-bold tracking-[-0.03em] text-paper">
-                  {access.price || '₹499'}
+                  {localizedPrice()}
                 </span>
                 <span className="text-[12px] font-semibold text-muted">/ month</span>
               </div>

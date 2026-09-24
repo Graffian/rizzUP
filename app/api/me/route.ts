@@ -5,7 +5,6 @@ import {
   getAccessInfo,
   paywallEnabled,
 } from '@/lib/auth'
-import { dodoPriceLabel } from '@/lib/dodo'
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}))
@@ -38,6 +37,5 @@ export async function POST(req: NextRequest) {
     trialUsed,
     trialLimit: TRIAL_LIMIT,
     canUse: active || trialUsed < TRIAL_LIMIT,
-    price: dodoPriceLabel(),
   })
 }

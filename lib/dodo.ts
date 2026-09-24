@@ -35,9 +35,3 @@ export async function createCheckoutSession(
   }
   return { checkoutUrl: data.checkout_url, sessionId: data.session_id }
 }
-
-export function dodoPriceLabel(): string {
-  return process.env.NEXT_PUBLIC_DODO_PRICE
-    ? `₹${process.env.NEXT_PUBLIC_DODO_PRICE}`
-    : 'the monthly plan'
-}
