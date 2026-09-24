@@ -18,6 +18,51 @@ type Prefs = {
   theme: Theme
   scenario: string
 }
+type Access = {
+  paywall: boolean
+  canUse: boolean
+  active: boolean
+  trialUsed: number
+  trialLimit: number
+  price?: string
+}
+
+const initialAccess: Access = {
+  paywall: false,
+  canUse: true,
+  active: true,
+  trialUsed: 0,
+  trialLimit: 3,
+}
+
+function getDeviceId(): string {
+  if (typeof window === 'undefined') return ''
+  let id = ''
+  try {
+    id = localStorage.getItem('rz_device') || ''
+  } catch {
+    id = ''
+  }
+  if (!id) {
+    try {
+      id = crypto?.randomUUID?.() || ''
+    } catch {
+      id = ''
+    }
+    if (!id) {
+      id =
+        'd-' +
+        Math.random().toString(36).slice(2, 10) +
+        Math.random().toString(36).slice(2, 10)
+    }
+    try {
+      localStorage.setItem('rz_device', id)
+    } catch {
+      // storage unavailable
+    }
+  }
+  return id
+}
 
 const LANGUAGES = [
   { value: 'auto', label: 'auto' },
@@ -124,6 +169,11 @@ export default function RizzApp() {
   const [replies, setReplies] = useState<Reply[] | null>(null)
   const [meta, setMeta] = useState('')
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
+  const [access, setAccess] = useState<Access>(initialAccess)
+  const [unlock, setUnlock] = useState<{ open: boolean; processing: boolean }>({
+    open: false,
+    processing: false,
+  })
 
   const taRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -145,9 +195,36 @@ export default function RizzApp() {
     toastTimer.current = setTimeout(() => setToast(null), 3200)
   }, [])
 
+  const refreshAccess = useCallback(async (): Promise<boolean> => {
+    const deviceId = getDeviceId()
+    if (!deviceId) return false
+    try {
+      const res = await fetch('/api/me', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId }),
+      })
+      if (!res.ok) return false
+      const d = (await res.json()) as Partial<Access>
+      if (typeof d.paywall !== 'boolean') return false
+      setAccess({
+        paywall: d.paywall,
+        canUse: d.canUse !== false,
+        active: d.active === true,
+        trialUsed: d.trialUsed ?? 0,
+        trialLimit: d.trialLimit ?? 3,
+        price: d.price,
+      })
+      return d.active === true
+    } catch {
+      return false
+    }
+  }, [])
+
   useEffect(() => {
     setPrefs(loadPrefs())
-  }, [])
+    void refreshAccess()
+  }, [refreshAccess])
 
   useEffect(() => {
     return () => {
@@ -205,6 +282,25 @@ export default function RizzApp() {
     fileRef.current?.click()
   }, [])
 
+  const startCheckout = useCallback(async () => {
+    setUnlock((u) => ({ ...u, processing: true }))
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId: getDeviceId() }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.checkoutUrl) {
+        throw new Error(data.error || 'Could not open checkout.')
+      }
+      window.location.href = data.checkoutUrl
+    } catch (err) {
+      setUnlock((u) => ({ ...u, processing: false }))
+      showToast(errorMessage(err), true)
+    }
+  }, [showToast])
+
   const onEditorPaste = useCallback(
     (e: React.ClipboardEvent) => {
       const f = e.clipboardData?.files?.[0]
@@ -254,11 +350,27 @@ export default function RizzApp() {
           token: prefs.token,
           model: prefs.model,
           scenario: prefs.scenario,
+          deviceId: getDeviceId(),
         }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'Request failed')
+      if (!res.ok) {
+        if (res.status === 402 && data.paywall) {
+          setUnlock({ open: true, processing: false })
+          return
+        }
+        throw new Error(data.error || 'Request failed')
+      }
       setReplies(data.replies || [])
+      setAccess((a) =>
+        a.paywall && !a.active
+          ? {
+              ...a,
+              trialUsed: a.trialUsed + 1,
+              canUse: a.trialUsed + 1 < a.trialLimit,
+            }
+          : a
+      )
       const source = image ? 'screenshot' : 'text'
       const scenarioTag =
         SCENARIOS.find((s) => s.id === prefs.scenario)?.tag || ''
@@ -288,10 +400,17 @@ export default function RizzApp() {
             token: prefs.token,
             model: prefs.model,
             scenario: prefs.scenario,
+            deviceId: getDeviceId(),
           }),
         })
         const data = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(data.error || 'Request failed')
+        if (!res.ok) {
+          if (res.status === 402 && data.paywall) {
+            setUnlock({ open: true, processing: false })
+            return
+          }
+          throw new Error(data.error || 'Request failed')
+        }
         setReplies((prev) =>
           prev
             ? prev.map((r, i) =>
@@ -754,6 +873,24 @@ export default function RizzApp() {
             <p className="mt-3.5 text-[11px] font-semibold tracking-[0.04em] text-faint">
               [enter] to generate · paste, drag or ctrl/⌘+v a screenshot · [shift]+[enter] for a new line
             </p>
+            {access.paywall && (
+              <p className="mt-2 text-[11px] font-semibold tracking-[0.04em] text-muted/90">
+                {access.active ? (
+                  <>unlimited — you&apos;re on the plan</>
+                ) : (
+                  <>
+                    <span className="text-rust">{Math.max(0, access.trialLimit - access.trialUsed)}</span> free{' '}
+                    {access.trialLimit - access.trialUsed === 1 ? 'try' : 'tries'} left ·{' '}
+                    <button
+                      onClick={() => setUnlock({ open: true, processing: false })}
+                      className="underline decoration-rust/40 underline-offset-2 transition hover:text-rust hover:decoration-rust"
+                    >
+                      go unlimited
+                    </button>
+                  </>
+                )}
+              </p>
+            )}
           </div>
         </section>
 
@@ -884,6 +1021,75 @@ export default function RizzApp() {
       {toast && (
         <div className="fixed bottom-6 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-max -translate-x-1/2 animate-fadeUp rounded-xl border border-line border-l-2 border-l-rust bg-panel2 px-4 py-3 text-center font-body text-[11px] font-bold tracking-[0.04em] shadow-2xl">
           {toast.msg}
+        </div>
+      )}
+
+      {/* unlock modal */}
+      {unlock.open && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/85 p-4"
+          onClick={() => setUnlock({ open: false, processing: false })}
+        >
+          <div
+            className="w-full max-w-md animate-fadeUp overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="border-b-2 border-line px-6 py-5">
+              <p className="text-[10px] font-bold tracking-[0.12em] text-rust uppercase">
+                free tries used up
+              </p>
+              <h2 className="mt-1 font-head text-[22px] font-bold tracking-[-0.02em] text-paper">
+                Go unlimited
+              </h2>
+            </div>
+            <div className="px-6 py-6">
+              <p className="text-[13.5px] leading-relaxed text-muted">
+                A monthly plan unlocks every vibe, screenshot read and replace —
+                no limits, cancel anytime.
+              </p>
+              <div className="mt-4 flex items-baseline gap-1.5">
+                <span className="font-head text-[34px] font-bold tracking-[-0.03em] text-paper">
+                  {access.price || '₹499'}
+                </span>
+                <span className="text-[12px] font-semibold text-muted">/ month</span>
+              </div>
+              <button
+                onClick={startCheckout}
+                disabled={unlock.processing}
+                className="mt-5 inline-flex w-full items-center justify-center gap-2.5 rounded-[14px] border-2 border-rust bg-rust px-6 py-3 text-[13px] font-bold text-ink transition hover:-translate-y-0.5 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {unlock.processing ? (
+                  <>
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink/25 border-t-ink" />
+                    opening payment…
+                  </>
+                ) : (
+                  'unlock with dodo payments'
+                )}
+              </button>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <button
+                  onClick={() => {
+                    setUnlock({ open: false, processing: false })
+                    void refreshAccess()
+                  }}
+                  className="text-[11px] font-semibold text-muted transition hover:text-paper"
+                >
+                  maybe later
+                </button>
+                <button
+                  onClick={() => {
+                    void refreshAccess().then((active) => {
+                      if (active) setUnlock({ open: false, processing: false })
+                    })
+                  }}
+                  className="text-[11px] font-semibold text-rust underline decoration-rust/40 underline-offset-2 transition hover:decoration-rust"
+                >
+                  already paid — check again
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

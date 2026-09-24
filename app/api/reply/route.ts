@@ -11,6 +11,15 @@ import {
   transcriptThemLines,
 } from '@/lib/ai'
 import {
+  TRIAL_LIMIT,
+  blockedResponse,
+  claimTrial,
+  clientIp,
+  getAccessInfo,
+  missingDeviceResponse,
+  paywallEnabled,
+} from '@/lib/auth'
+import {
   defaultModel,
   hfChat,
   readEnv,
@@ -54,6 +63,20 @@ export async function POST(req: NextRequest) {
       { error: 'No Hugging Face token. Add a free one at huggingface.co/settings/tokens and save it in Settings.' },
       { status: 401 }
     )
+  }
+
+  const deviceId = String(body.deviceId || '').trim()
+  const ip = clientIp(req)
+  let hasActiveAccess = false
+  if (paywallEnabled()) {
+    if (!deviceId) {
+      return missingDeviceResponse()
+    }
+    const access = await getAccessInfo(deviceId, ip)
+    if (!access.active && access.trialUsed >= TRIAL_LIMIT) {
+      return blockedResponse()
+    }
+    hasActiveAccess = access.active
   }
 
   const vibes = VIBES.slice(0, count)
@@ -153,6 +176,9 @@ export async function POST(req: NextRequest) {
         { error: 'Could not parse model output. Try again.' },
         { status: 502 }
       )
+    }
+    if (paywallEnabled() && deviceId && !hasActiveAccess) {
+      await claimTrial(deviceId, ip)
     }
     return NextResponse.json({ model: usedModel, replies })
   } catch (e: any) {

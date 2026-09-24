@@ -8,6 +8,14 @@ import {
   parseSwapReply,
   transcriptThemLines,
 } from '@/lib/ai'
+import {
+  TRIAL_LIMIT,
+  blockedResponse,
+  clientIp,
+  getAccessInfo,
+  missingDeviceResponse,
+  paywallEnabled,
+} from '@/lib/auth'
 import { defaultModel, hfChat, readEnv, transcribeImage } from '@/lib/hf'
 
 const MAX_IMAGE_CHARS = 3_000_000
@@ -47,6 +55,17 @@ export async function POST(req: NextRequest) {
       { error: 'No Hugging Face token configured.' },
       { status: 401 }
     )
+  }
+
+  const deviceId = String(body.deviceId || '').trim()
+  if (paywallEnabled()) {
+    if (!deviceId) {
+      return missingDeviceResponse()
+    }
+    const access = await getAccessInfo(deviceId, clientIp(req))
+    if (!access.active && access.trialUsed >= TRIAL_LIMIT) {
+      return blockedResponse()
+    }
   }
 
   let buildSwapPrompt: (extra?: string) => string
