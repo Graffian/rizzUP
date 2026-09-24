@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { VIBES, buildFixMessages, buildMessages, looksLikeHinglish, parseReplies } from '@/lib/ai'
-import { defaultModel, hfChat, readEnv } from '@/lib/hf'
+import {
+  VIBES,
+  buildContextMessages,
+  buildFixMessages,
+  buildMessages,
+  looksLikeHinglish,
+  parseReplies,
+  transcriptThemLines,
+} from '@/lib/ai'
+import {
+  defaultModel,
+  hfChat,
+  readEnv,
+  transcribeImage,
+} from '@/lib/hf'
+
+const MAX_IMAGE_CHARS = 3_000_000
 
 export async function POST(req: NextRequest) {
   let body: any
@@ -14,12 +29,23 @@ export async function POST(req: NextRequest) {
   const dModel = defaultModel()
   const model = String(body.model || dModel).trim() || dModel
   const message = String(body.message || '').trim()
+  const image = String(body.image || '').trim()
+  const scenario = String(body.scenario || '').trim()
   const language = String(body.language || 'auto')
   let count = parseInt(body.count, 10) || 3
   count = Math.min(Math.max(count, 1), 5)
 
-  if (!message) {
-    return NextResponse.json({ error: 'Message is empty.' }, { status: 400 })
+  if (!message && !image) {
+    return NextResponse.json(
+      { error: 'Paste a message or attach a screenshot.' },
+      { status: 400 }
+    )
+  }
+  if (image && image.length > MAX_IMAGE_CHARS) {
+    return NextResponse.json(
+      { error: 'Screenshot is too large. Try a smaller image.' },
+      { status: 413 }
+    )
   }
   if (!token) {
     return NextResponse.json(
@@ -29,17 +55,42 @@ export async function POST(req: NextRequest) {
   }
 
   const vibes = VIBES.slice(0, count)
-  const hinglishMode = language === 'Hinglish' || looksLikeHinglish(message)
-  const englishMode =
-    (language === 'auto' || language === 'English') &&
-    !hinglishMode &&
-    !/\p{Script=Devanagari}/u.test(message)
+
+  let genMessages: Array<{ role: string; content: string }>
+  let hinglishMode: boolean
+  let englishMode: boolean
+  let fixText: string
+
+  if (image) {
+    let transcript: string
+    try {
+      transcript = await transcribeImage(token, image)
+    } catch (e: any) {
+      return NextResponse.json(
+        { error: e?.message || 'Could not read the screenshot.' },
+        { status: e?.status && e.status >= 400 && e.status <= 599 ? e.status : 500 }
+      )
+    }
+    genMessages = buildContextMessages(transcript, message, language, vibes, scenario)
+    const themText = [message, transcriptThemLines(transcript)].filter(Boolean).join('\n')
+    hinglishMode = language === 'Hinglish' || looksLikeHinglish(themText)
+    englishMode =
+      (language === 'auto' || language === 'English') &&
+      !hinglishMode &&
+      !/\p{Script=Devanagari}/u.test(themText)
+    fixText = [message, transcript].filter(Boolean).join('\n')
+  } else {
+    genMessages = buildMessages(message, language, vibes, scenario)
+    hinglishMode = language === 'Hinglish' || looksLikeHinglish(message)
+    englishMode =
+      (language === 'auto' || language === 'English') &&
+      !hinglishMode &&
+      !/\p{Script=Devanagari}/u.test(message)
+    fixText = message
+  }
+
   try {
-    const { text, model: usedModel } = await hfChat(
-      token,
-      model,
-      buildMessages(message, language, vibes)
-    )
+    const { text, model: usedModel } = await hfChat(token, model, genMessages)
     let replies = parseReplies(text, vibes)
 
     const backfill = async (
@@ -51,7 +102,7 @@ export async function POST(req: NextRequest) {
         const missing = vibes.filter((v) => !accepted.some((r) => r.vibe === v))
         if (!missing.length) break
         try {
-          const fixed = await hfChat(token, model, buildFixMessages(message, lang, missing))
+          const fixed = await hfChat(token, model, buildFixMessages(fixText, lang, missing))
           const fixedReplies = parseReplies(fixed.text, missing).filter(keep)
           for (const fr of fixedReplies) {
             if (accepted.length < vibes.length && !accepted.some((r) => r.vibe === fr.vibe)) {

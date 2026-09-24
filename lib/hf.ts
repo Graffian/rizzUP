@@ -1,5 +1,7 @@
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
+import { buildVisionTranscriptMessages } from '@/lib/ai'
+
 export class HFError extends Error {
   status: number
   constructor(message: string, status: number) {
@@ -14,6 +16,44 @@ export function readEnv(key: string): string | undefined {
   return val && String(val).trim() !== '' ? String(val) : undefined
 }
 
+export type ChatMessage = {
+  role: string
+  content: string | Array<Record<string, any>>
+}
+export type ChatMessages = ChatMessage[]
+
+const VISION_FALLBACKS = [
+  'google/gemma-3-27b-it',
+  'Qwen/Qwen3-VL-235B-A22B-Instruct',
+  'Qwen/Qwen2.5-VL-3B-Instruct',
+  'HuggingFaceTB/SmolVLM2-2.2B-Instruct',
+]
+
+export function defaultVisionModel(): string {
+  return readEnv('HF_VISION_MODEL') || 'Qwen/Qwen3-VL-30B-A3B-Instruct'
+}
+
+export function visionModelCandidates(): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const m of [defaultVisionModel(), ...VISION_FALLBACKS]) {
+    if (!seen.has(m)) {
+      seen.add(m)
+      out.push(m)
+    }
+  }
+  return out
+}
+
+export function isModelUnavailableError(e: unknown): boolean {
+  if (!(e instanceof HFError)) return false
+  if (e.status === 404) return true
+  if (e.status !== 400 && e.status !== 401 && e.status !== 403) return false
+  return /not supported|model_not_supported|not a chat model|does not exist|not found|not available|not deployed|not in your plan|no such model|not valid/i.test(
+    e.message
+  )
+}
+
 export function hfUrl(): string {
   return readEnv('HF_URL') || 'https://router.huggingface.co/v1/chat/completions'
 }
@@ -25,8 +65,10 @@ export function defaultModel(): string {
 export async function hfChat(
   token: string,
   model: string,
-  messages: Array<{ role: string; content: string }>,
-  maxTries = 4
+  messages: ChatMessages,
+  maxTries = 4,
+  maxTokens = 700,
+  temperature = 0.9
 ) {
   const url = hfUrl()
   let lastStatus = 0
@@ -34,9 +76,9 @@ export async function hfChat(
   const payload: Record<string, any> = {
     model,
     messages,
-    temperature: 0.9,
+    temperature,
     top_p: 0.95,
-    max_tokens: 700,
+    max_tokens: maxTokens,
     extra_body: { wait_for_model: true },
   }
   for (let attempt = 0; attempt < maxTries; attempt++) {
@@ -86,4 +128,31 @@ export async function hfChat(
       ? 'Free tier rate limit reached. Wait a few seconds and try again.'
       : 'The free model is busy loading. Try again in a few seconds.'
   throw new HFError(lastMsg, lastStatus || 503)
+}
+
+export async function transcribeImage(token: string, image: string): Promise<string> {
+  let lastErr: HFError | null = null
+  for (const visionModel of visionModelCandidates()) {
+    try {
+      const { text } = await hfChat(
+        token,
+        visionModel,
+        buildVisionTranscriptMessages(image),
+        4,
+        1200,
+        0.1
+      )
+      const t = String(text || '').trim()
+      if (t && (t.includes('TRANSCRIPT') || /^PLATFORM\s*:/m.test(t))) return t
+      lastErr = new HFError('Vision model returned no readable transcript.', 502)
+    } catch (e: any) {
+      if (e?.status === 429 || e?.status === 503) throw e
+      if (!isModelUnavailableError(e)) throw e
+      lastErr = e
+    }
+  }
+  throw new HFError(
+    lastErr?.message || 'No vision model is available right now. Try again in a moment.',
+    502
+  )
 }

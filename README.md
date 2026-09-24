@@ -11,6 +11,7 @@ Paste the message. Get a handful of replies that sound like you on a good day �
 ## Features
 
 - Paste a message, press **Enter**, get **3 or 5 vibe-tagged replies** (smooth / witty / cheeky / warm / short)
+- Or attach a **screenshot of the conversation** (file picker, drag & drop, or ctrl/⌘+V) — a vision model reads it into a transcript (platform, situation, who you're replying to), then the **text model writes** the replies to her last message — or just drops in a natural follow-up
 - **Swap** any single reply without regenerating the whole batch
 - **Copy** any reply in one click
 - **13 languages** + Hinglish (Roman-script Hindi, never Devanagari unless asked) + auto-detect mode
@@ -42,8 +43,11 @@ Or skip `.env` and paste the token in the app's **Settings** panel — it overri
 | Env var | Default | Purpose |
 | --- | --- | --- |
 | `HF_TOKEN` | — | Hugging Face token |
-| `HF_MODEL` | `deepseek-ai/DeepSeek-V3-0324` | Any chat model enabled on your HF account |
+| `HF_MODEL` | `deepseek-ai/DeepSeek-V3-0324` | Text model (message → replies) |
+| `HF_VISION_MODEL` | `Qwen/Qwen3-VL-30B-A3B-Instruct` | Vision model that reads/transcribes screenshots (the text model `HF_MODEL` then writes the replies); falls back to `google/gemma-3-27b-it`, `Qwen/Qwen3-VL-235B-A22B-Instruct`, then smaller options if the free tier doesn't serve a candidate |
 | `HF_URL` | `https://router.huggingface.co/v1/chat/completions` | Inference endpoint |
+
+Screenshots are downscaled and compressed in the browser (max ~1400px, JPEG) before being sent, and never stored.
 
 ## API
 

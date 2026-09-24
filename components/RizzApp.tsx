@@ -6,10 +6,18 @@ import {
   useRef,
   useState,
 } from 'react'
+import { SCENARIOS } from '@/lib/ai'
 
 type Reply = { vibe: string; reply: string }
 type Theme = 'light' | 'dark' | 'system'
-type Prefs = { token: string; model: string; lang: string; count: string; theme: Theme }
+type Prefs = {
+  token: string
+  model: string
+  lang: string
+  count: string
+  theme: Theme
+  scenario: string
+}
 
 const LANGUAGES = [
   { value: 'auto', label: 'auto' },
@@ -34,6 +42,7 @@ const initialPrefs: Prefs = {
   lang: 'auto',
   count: '3',
   theme: 'light',
+  scenario: 'icebreaker',
 }
 
 function loadPrefs(): Prefs {
@@ -49,6 +58,41 @@ function loadPrefs(): Prefs {
     ...(stored || {}),
     theme: stored?.theme === 'dark' || stored?.theme === 'system' ? stored.theme : 'light',
   }
+}
+
+function downscaleImage(
+  file: File,
+  maxEdge = 1400,
+  quality = 0.82
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const scale = Math.min(1, maxEdge / Math.max(img.width, img.height))
+      const w = Math.round(img.width * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        URL.revokeObjectURL(url)
+        reject(new Error('canvas unavailable'))
+        return
+      }
+      ctx.drawImage(img, 0, 0, w, h)
+      URL.revokeObjectURL(url)
+      const data = canvas.toDataURL('image/jpeg', quality)
+      if (!data || data.length < 100) reject(new Error('could not encode image'))
+      else resolve(data)
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('could not read image'))
+    }
+    img.src = url
+  })
 }
 
 function errorMessage(err: unknown): string {
@@ -69,12 +113,15 @@ export default function RizzApp() {
   const [prefs, setPrefs] = useState<Prefs>(loadPrefs)
   const [showSettings, setShowSettings] = useState(false)
   const [message, setMessage] = useState('')
+  const [image, setImage] = useState<string | null>(null)
+  const [imageBusy, setImageBusy] = useState(false)
   const [busy, setBusy] = useState(false)
   const [replies, setReplies] = useState<Reply[] | null>(null)
   const [meta, setMeta] = useState('')
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
 
   const taRef = useRef<HTMLTextAreaElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const swapping = useRef<Record<number, boolean>>({})
 
@@ -121,11 +168,63 @@ export default function RizzApp() {
     }
   }, [showToast, autoGrow])
 
+  const handleImageFile = useCallback(
+    async (file: File) => {
+      if (!file.type.startsWith('image/')) {
+        showToast('that file is not an image', true)
+        return
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        showToast('image too big — max 15MB', true)
+        return
+      }
+      setImageBusy(true)
+      try {
+        const data = await downscaleImage(file)
+        setImage(data)
+        showToast('screenshot attached')
+      } catch {
+        showToast('could not read that image', true)
+      } finally {
+        setImageBusy(false)
+      }
+    },
+    [showToast]
+  )
+
+  const pickImage = useCallback(() => {
+    fileRef.current?.click()
+  }, [])
+
+  const onEditorPaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      const f = e.clipboardData?.files?.[0]
+      if (f && f.type.startsWith('image/')) {
+        e.preventDefault()
+        handleImageFile(f)
+      }
+    },
+    [handleImageFile]
+  )
+
+  const onEditorDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      const f = e.dataTransfer?.files?.[0]
+      if (f) handleImageFile(f)
+    },
+    [handleImageFile]
+  )
+
+  const onEditorDragOver = useCallback((e: React.DragEvent) => {
+    if (e.dataTransfer?.types?.includes('Files')) e.preventDefault()
+  }, [])
+
   const gen = useCallback(async () => {
     if (busy) return
     const msg = message.trim()
-    if (!msg) {
-      showToast('paste a message first', true)
+    if (!msg && !image) {
+      showToast('paste a message or attach a screenshot', true)
       taRef.current?.focus()
       return
     }
@@ -140,22 +239,29 @@ export default function RizzApp() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: msg,
+          image: image || undefined,
           language: prefs.lang,
           count: parseInt(prefs.count, 10) || 3,
           token: prefs.token,
           model: prefs.model,
+          scenario: prefs.scenario,
         }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Request failed')
       setReplies(data.replies || [])
-      setMeta(`${prefs.count} versions · ${data.model || 'default model'}`)
+      const source = image ? 'screenshot' : 'text'
+      const scenarioTag =
+        SCENARIOS.find((s) => s.id === prefs.scenario)?.tag || ''
+      setMeta(
+        `${prefs.count} versions · ${source} · ${scenarioTag} · ${data.model || 'default model'}`
+      )
     } catch (err) {
       showToast(errorMessage(err), true)
     } finally {
       setBusy(false)
     }
-  }, [busy, message, prefs, showToast])
+  }, [busy, message, image, prefs, showToast])
 
   const swap = useCallback(
     async (index: number, vibe: string, base: string) => {
@@ -167,10 +273,12 @@ export default function RizzApp() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: base,
+            image: image || undefined,
             vibe,
             language: prefs.lang,
             token: prefs.token,
             model: prefs.model,
+            scenario: prefs.scenario,
           }),
         })
         const data = await res.json().catch(() => ({}))
@@ -186,7 +294,7 @@ export default function RizzApp() {
         swapping.current[index] = false
       }
     },
-    [prefs, showToast]
+    [prefs, showToast, image]
   )
 
   const copy = useCallback(
@@ -417,19 +525,84 @@ export default function RizzApp() {
         )}
 
         {/* editor */}
-        <section className="animate-entrance animate-delay-4 mt-12 overflow-hidden rounded-[24px] border-2 border-line2/60 bg-panel shadow-[0_2px_0_rgb(var(--color-paper)_/_0.1)] sm:mt-14">
+        <section
+          onPaste={onEditorPaste}
+          onDrop={onEditorDrop}
+          onDragOver={onEditorDragOver}
+          className="animate-entrance animate-delay-4 mt-12 overflow-hidden rounded-[24px] border-2 border-line2/60 bg-panel shadow-[0_2px_0_rgb(var(--color-paper)_/_0.1)] sm:mt-14"
+        >
           <div className="flex items-center justify-between border-b-2 border-line px-5 py-4">
             <span className="font-head text-[15px] font-bold tracking-[-0.02em] text-paper">
               the text
             </span>
-            <button
-              onClick={pasteFromClipboard}
-              className="rounded-lg px-2.5 py-1 font-body text-[11px] font-bold tracking-[0.03em] text-muted transition hover:bg-rust/10 hover:text-rust"
-            >
-              paste
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={pickImage}
+                disabled={imageBusy}
+                className="rounded-lg px-2.5 py-1 font-body text-[11px] font-bold tracking-[0.03em] text-muted transition hover:bg-rust/10 hover:text-rust disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {imageBusy ? 'reading…' : 'attach'}
+              </button>
+              <button
+                onClick={pasteFromClipboard}
+                className="rounded-lg px-2.5 py-1 font-body text-[11px] font-bold tracking-[0.03em] text-muted transition hover:bg-rust/10 hover:text-rust"
+              >
+                paste
+              </button>
+            </div>
           </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) handleImageFile(f)
+              e.target.value = ''
+            }}
+          />
           <div className="p-5 sm:p-6">
+            <div className="mb-4 grid gap-2 sm:grid-cols-3">
+              {SCENARIOS.map((s) => {
+                const active = prefs.scenario === s.id
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => savePrefs({ ...prefs, scenario: s.id })}
+                    className={`rounded-[16px] border-2 px-4 py-3 text-left transition ${
+                      active
+                        ? 'border-rust/80 bg-rust/10 text-rust'
+                        : 'border-line2 bg-ink2/40 text-muted hover:border-rust hover:text-rust'
+                    }`}
+                  >
+                    <span
+                      className={`block text-[10px] font-bold tracking-[0.1em] ${
+                        active ? 'text-rust/70' : ''
+                      }`}
+                    >
+                      {s.tag}
+                    </span>
+                    <span
+                      className={`mt-0.5 block font-head text-[13px] font-bold tracking-[-0.01em] ${
+                        active ? 'text-paper' : ''
+                      }`}
+                    >
+                      {s.title}
+                    </span>
+                    <span
+                      className={`mt-0.5 block text-[11px] leading-snug ${
+                        active ? 'text-paper/60' : 'text-faint'
+                      }`}
+                    >
+                      {s.description}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
             <textarea
               ref={taRef}
               value={message}
@@ -445,10 +618,33 @@ export default function RizzApp() {
               }}
               rows={3}
               maxLength={1000}
-              placeholder="what they sent…"
+              placeholder={image ? 'optional — add a note or the exact message…' : 'what they sent…'}
               spellCheck
               className="min-h-[128px] w-full resize-y rounded-[18px] border-2 border-line bg-ink2/80 px-4 py-4 text-[16px] leading-relaxed text-paper outline-none transition placeholder:text-faint focus:border-rust focus:ring-4 focus:ring-rust/10"
             />
+            {image && (
+              <div className="mt-3 flex items-center gap-3 rounded-[14px] border-2 border-dashed border-line2/70 bg-ink2/40 p-3">
+                <img
+                  src={image}
+                  alt="attached screenshot"
+                  className="h-20 w-auto rounded-lg border border-line object-contain"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[12px] font-semibold text-paper/80">
+                    screenshot attached
+                  </p>
+                  <p className="text-[11px] leading-relaxed text-faint">
+                    the ai reads this conversation to write your replies
+                  </p>
+                </div>
+                <button
+                  onClick={() => setImage(null)}
+                  className="shrink-0 rounded-xl border-2 border-line2 px-3 py-1.5 font-body text-[11px] font-bold text-muted transition hover:border-rust hover:bg-rust/10 hover:text-paper"
+                >
+                  remove
+                </button>
+              </div>
+            )}
             <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-wrap items-end gap-3.5">
                 <label>
@@ -518,7 +714,7 @@ export default function RizzApp() {
               </button>
             </div>
             <p className="mt-3.5 text-[11px] font-semibold tracking-[0.04em] text-faint">
-              [enter] to generate · [shift]+[enter] for a new line
+              [enter] to generate · paste, drag or ctrl/⌘+v a screenshot · [shift]+[enter] for a new line
             </p>
           </div>
         </section>
@@ -584,7 +780,7 @@ export default function RizzApp() {
                 awaiting input
               </p>
               <p className="mt-2.5 text-sm text-muted">
-                paste the message, hit{' '}
+                paste the message or a screenshot, hit{' '}
                 <span className="font-body text-[12px] font-bold text-paper">
                   generate
                 </span>
