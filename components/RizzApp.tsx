@@ -550,13 +550,6 @@ export default function RizzApp() {
             </span>
             <div className="flex items-center gap-2">
               <button
-                onClick={pickImage}
-                disabled={imageBusy}
-                className="rounded-lg px-2.5 py-1 font-body text-[11px] font-bold tracking-[0.03em] text-muted transition hover:bg-rust/10 hover:text-rust disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {imageBusy ? 'reading…' : 'attach'}
-              </button>
-              <button
                 onClick={pasteFromClipboard}
                 className="rounded-lg px-2.5 py-1 font-body text-[11px] font-bold tracking-[0.03em] text-muted transition hover:bg-rust/10 hover:text-rust"
               >
@@ -616,25 +609,57 @@ export default function RizzApp() {
                 )
               })}
             </div>
-            <textarea
-              ref={taRef}
-              value={message}
-              onChange={(e) => {
-                setMessage(e.target.value)
-                autoGrow()
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  gen()
-                }
-              }}
-              rows={3}
-              maxLength={1000}
-              placeholder={image ? 'optional — add a note or the exact message…' : prefs.scenario === 'icebreaker' ? 'optional — leave blank to open cold, or add a photo/story context…' : 'what they sent…'}
-              spellCheck
-              className="min-h-[128px] w-full resize-y rounded-[18px] border-2 border-line bg-ink2/80 px-4 py-4 text-[16px] leading-relaxed text-paper outline-none transition placeholder:text-faint focus:border-rust focus:ring-4 focus:ring-rust/10"
-            />
+            <div className="relative">
+              <textarea
+                ref={taRef}
+                value={message}
+                onChange={(e) => {
+                  setMessage(e.target.value)
+                  autoGrow()
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    gen()
+                  }
+                }}
+                rows={3}
+                maxLength={1000}
+                placeholder={image ? 'optional — add a note or the exact message…' : prefs.scenario === 'icebreaker' ? 'optional — leave blank to open cold, or add a photo/story context…' : 'what they sent…'}
+                spellCheck
+                className="min-h-[128px] w-full resize-y rounded-[18px] border-2 border-line bg-ink2/80 px-4 py-4 pr-12 text-[16px] leading-relaxed text-paper outline-none transition placeholder:text-faint focus:border-rust focus:ring-4 focus:ring-rust/10"
+              />
+              <div className="absolute right-3 bottom-3.5 flex h-8 w-8 items-center justify-center">
+                {!image && !imageBusy && (
+                  <>
+                    <span
+                      aria-hidden
+                      className="animate-hint-ring pointer-events-none absolute -inset-0.5 rounded-[11px] border-2 border-rust/60"
+                    />
+                    <button
+                      onClick={pickImage}
+                      className="animate-hint-bob absolute right-[calc(100%+10px)] flex items-center gap-1.5 rounded-full border-2 border-rust/40 bg-panel px-2.5 py-1 font-body text-[10px] font-bold whitespace-nowrap tracking-[0.02em] text-rust shadow-sm transition hover:border-rust hover:bg-rust/10"
+                    >
+                      add a screenshot
+                      <span aria-hidden>→</span>
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={pickImage}
+                  disabled={imageBusy}
+                  title="attach a screenshot"
+                  aria-label="attach a screenshot"
+                  className={`flex h-8 w-8 items-center justify-center rounded-[10px] border-2 text-[15px] leading-none font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                    image
+                      ? 'border-rust/60 bg-rust/10 text-rust'
+                      : 'border-line2 text-muted hover:border-rust hover:text-rust'
+                  }`}
+                >
+                  {imageBusy ? '…' : '+'}
+                </button>
+              </div>
+            </div>
             {image && (
               <div className="mt-3 flex items-center gap-3 rounded-[14px] border-2 border-dashed border-line2/70 bg-ink2/40 p-3">
                 <img

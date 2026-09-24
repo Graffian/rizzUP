@@ -154,6 +154,8 @@ body {
     .animate-entrance,
     .animate-fadeUp,
     .animate-fadeIn,
+    .animate-hint-ring,
+    .animate-hint-bob,
     .intro-logo,
     .shimmer::after {
       animation: none;
@@ -200,5 +202,31 @@ body {
   }
   .animate-fadeIn {
     animation: fadeIn 0.255s ease both;
+  }
+  @keyframes hintPulse {
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.08);
+    }
+  }
+  @keyframes hintBob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-2px);
+    }
+  }
+  .animate-hint-ring {
+    animation: hintPulse 1.7s ease-in-out infinite;
+  }
+  .animate-hint-bob {
+    animation: hintBob 1.7s ease-in-out infinite;
   }
 }
