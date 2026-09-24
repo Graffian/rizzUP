@@ -42,11 +42,11 @@ Local vars live in `.env`, production vars go in **Netlify → Site settings →
 | `DODO_API_BASE` | Netlify + `.env` | `https://test.dodopayments.com` until live, then `https://live.dodopayments.com` |
 
 > **Pricing display:** the Dodo product is priced **USD $6/month** (verified on the
-> product). The unlock modal shows a **locale-aware price** — `₹499` for Indian
-> users, `$6` for everyone else — detected client-side from the browser language
-> (INR → ₹499, anything else → $6). No `NEXT_PUBLIC_DODO_PRICE` env var needed.
-> Dodo's own checkout page converts the charge to the buyer's local currency
-> (~₹499 for Indian cards, $6 for US cards) with adaptive pricing.
+> product). The unlock modal shows a **locale-aware price** — `≈₹575` for Indian
+> users (the current $6 → INR conversion), `$6` for everyone else — detected
+> client-side from the browser language (INR → ≈₹575, anything else → $6). No
+> `NEXT_PUBLIC_DODO_PRICE` env var needed. Dodo's checkout page converts the
+> charge to the buyer's local currency at the day's rate.
 
 Until `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are both set, the paywall is **disabled** — the app behaves exactly like before (unlimited, no tracking).
 

@@ -44,7 +44,7 @@ function localizedPrice(): string {
   } catch {
     currency = 'USD'
   }
-  return currency === 'INR' ? '₹499' : '$6'
+  return currency === 'INR' ? '≈₹575' : '$6'
 }
 
 function getDeviceId(): string {
