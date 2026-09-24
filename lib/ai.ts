@@ -100,7 +100,12 @@ export function extractJSON(text: string | null | undefined) {
 }
 
 export function parseReplies(raw: string, vibes: string[]) {
-  const out: Array<{ vibe: string; reply: string }> = []
+  const out: Array<{
+    vibe: string
+    reply: string
+    yes?: string
+    no?: string
+  }> = []
   const arr = extractJSON(raw)
   if (Array.isArray(arr)) {
     arr.forEach((it: any, i: number) => {
@@ -110,7 +115,16 @@ export function parseReplies(raw: string, vibes: string[]) {
       } else if (it && typeof it === 'object') {
         const r = String(it.reply || it.text || it.content || '').trim()
         const v = String(it.vibe || it.tone || it.label || vibes[i] || 'Reply').trim()
-        if (r) out.push({ vibe: v, reply: r })
+        const yes = it.yes ? String(it.yes).trim() : ''
+        const no = it.no ? String(it.no).trim() : ''
+        if (r) {
+          out.push({
+            vibe: v,
+            reply: r,
+            ...(yes ? { yes } : {}),
+            ...(no ? { no } : {}),
+          })
+        }
       }
     })
   }
@@ -141,7 +155,7 @@ export const SCENARIOS: Scenario[] = [
     title: 'The Icebreaker',
     description: "Sliding into DMs like it's nothing. First message, no cringe.",
     instruction:
-      "This is your FIRST message to this person — you're opening the conversation. Be confident, casual and low-pressure, like a friend who's clearly interested but not trying. No over-the-top lines, no heavy flirting on message one. Reference something specific (their story, bio, a mutual interest) so it doesn't feel copy-pasted, and end with an easy hook to respond to. Lead with charm, keep it short.",
+      "You're sending a first DM to someone you barely know. Open with a cheeky, out-of-nowhere YES/NO question — a bit random and charming, the kind that could work on anyone and nobody sees coming ('Is your dad a thief?', 'Do you believe in love at first sight?', 'Is that your natural smile?'). The question MUST NOT contain the word 'or' — one clean question, no second option; if you catch the word 'or', rewrite without it (never: 'Is your username a reference to something or did you just like how it sounds?'). Then the follow-ups are the payoff that lands it laughing: if she says YES, deliver the smooth reveal that completes the thought ('I knew it — he stole the stars and put them in your eyes.'); if she says NO, pivot the same theme with a foot in the door, never groveling ('Then who stole your heart... because I want to know who I'm up against.'). All three lines short, smooth, confident and playful — no flat praise like 'Nice work, looks professional', nothing creepy or over the line, and the tease must ALWAYS be an inverted compliment: she should end up smiling, never mocked or slighted. NEVER joke that she's fake or commercial — 'Did you steal that smile from a toothpaste commercial?' reads mean. NEVER a question that doesn't make sense — 'Is your workout routine secretly just charming people?' is nonsense word-salad; if you can't picture the joke landing, rewrite it. RULE: if you wouldn't send that exact text message to a crush you just met, rewrite it.",
   },
   {
     id: 'comeback',
@@ -167,6 +181,20 @@ export function scenarioBlock(id: string | null | undefined): string {
   return `\n\nSCENARIO ${s.tag}: ${s.title} — ${s.description}\nStrategy: ${s.instruction}`
 }
 
+function scenarioJsonShape(scenario?: string): string {
+  if (scenario === 'icebreaker') {
+    return `Every item must look exactly like this:
+{"vibe":"<the vibe>","reply":"<a playful, out-of-nowhere YES/NO question — no 'or' in it>","yes":"<charming reveal/payoff if she says yes>","no":"<smooth pivot on the same theme if she says no>"}
+
+The "reply" is a cheeky, random YES/NO question that could work on anyone — nobody sees it coming but it makes her smirk ('Is your dad a thief?', 'Do you believe in love at first sight?', 'Is that your natural smile?'). The question MUST NOT contain the word 'or' — one clean question, no second option. Then the "yes" and "no" lines are the payoff that lands the joke:
+- yes → the charming reveal that completes the thought ('I knew it — he stole the stars and put them in your eyes.').
+- no → pivot the same theme smoothly and keep a foot in the door ('Then who stole your heart... because I want to know who I'm up against.').
+All three lines short, smooth, confident and playful. NO flat praise ('nice work' is wrong), nothing creepy or over the line, and the tease must ALWAYS be an inverted compliment — she ends up smiling, never mocked. NEVER 'Did you steal that smile from a toothpaste commercial?' (mean), and NEVER nonsense like 'Is your workout routine secretly just charming people?'.`
+  }
+  return `Every item must look exactly like this:
+{"vibe":"<the vibe>","reply":"<the reply text>"}`
+}
+
 export function buildUserPrompt(
   message: string,
   language: string,
@@ -176,28 +204,37 @@ export function buildUserPrompt(
   const specific = !!language && language !== 'auto'
   const langLine = specific ? languageLabel(language) : 'the same language she wrote in'
   const list = vibes.map((v, i) => `${i + 1}. ${v}`).join('\n')
+  const hasMsg = !!message.trim()
   const languageBars = specific
     ? `\n\nCRITICAL: Every one of the ${vibes.length} replies MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if a reply comes out in the wrong language, rewrite the whole reply before including it.`
     : ''
   const englishNote =
-    !specific && !looksLikeHinglish(message) && !/\p{Script=Devanagari}/u.test(message)
+    hasMsg && !specific && !looksLikeHinglish(message) && !/\p{Script=Devanagari}/u.test(message)
       ? '\n\nHer message is in plain English, so write EVERY reply in plain, natural English.'
       : ''
-  const shortNote = message.trim().split(/\s+/).length <= 2 && message.trim().length <= 15
-    ? '\n\nThis message is very short. Reply short, casual and lightly flirty, like two people already comfortable with each other — never formal or surprised.'
-    : ''
-  return `The message:
+  const shortNote =
+    hasMsg && message.trim().split(/\s+/).length <= 2 && message.trim().length <= 15
+      ? '\n\nThis message is very short. Reply short, casual and lightly flirty, like two people already comfortable with each other — never formal or surprised.'
+      : ''
+  const head = hasMsg
+    ? `The message:
 """
 ${message}
+"""`
+    : scenario === 'icebreaker'
+      ? 'There is no incoming message yet — you are opening the conversation cold (first DM).'
+      : `The message:
 """
+${message}
+"""`
+  return `${head}
 ${scenarioBlock(scenario)}
 
 Reply language: ${langLine}${languageBars}${englishNote}${shortNote}
 
 ${personNote('text')}
 
-Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every item must look exactly like this:
-{"vibe":"<the vibe>","reply":"<the reply text>"}
+Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. ${scenarioJsonShape(scenario)}
 
 Vibes in order:
 ${list}
@@ -205,7 +242,12 @@ ${list}
 Here is the JSON array:`
 }
 
-export function buildFixMessages(message: string, language: string, vibes: string[]) {
+export function buildFixMessages(
+  message: string,
+  language: string,
+  vibes: string[],
+  scenario?: string
+) {
   const langLine = languageLabel(language)
   const list = vibes.map((v, i) => `${i + 1}. ${v}`).join('\n')
   return [
@@ -219,8 +261,58 @@ ${message}
 
 Some of the reply options came out in the wrong language. Rewrite ONLY the vibes listed below, and make sure the ENTIRE text of every reply is written in ${langLine}. No reply may be written fully in English, Devanagari, or any other language.
 
-Return ONLY a JSON array, in the order listed, shaped exactly like this:
-{"vibe":"<the vibe>","reply":"<the reply text>"}
+Return ONLY a JSON array, in the order listed. ${scenarioJsonShape(scenario)}
+
+Vibes to rewrite:
+${list}
+
+Here is the JSON array:`,
+    },
+  ] as Array<{ role: string; content: string }>
+}
+
+export function openingIssue(item: { reply: string; yes?: string; no?: string }): string {
+  const t = String(item.reply || '')
+    .trim()
+    .toLowerCase()
+  if (/\bor\b/.test(t)) {
+    return 'Contains the word "or" in the question — rewrite as ONE clean yes/no question with no "or" and no second option.'
+  }
+  if (/toothpaste commercial|steal that smile|secretly just|that fake|commercial-grade|barely real/.test(t)) {
+    return 'This reads mean or backhanded (or nonsense) — rewrite so the tease is an inverted compliment that leaves her smiling, never mocked.'
+  }
+  if (/\bnice work\b|\bgreat work\b|\bgood job\b|\bwell done\b|looks professional|nailed it|deserves a raise/.test(t)) {
+    return 'This reads like flat neutral praise — rewrite it to sound like a plain, real first DM instead.'
+  }
+  const praise = /\bnice work\b|\bgreat work\b|\bgood job\b|\bwell done\b|looks professional|nailed it|deserves a raise/
+  for (const f of [item.yes, item.no]) {
+    if (f && praise.test(String(f).toLowerCase())) {
+      return 'A yes/no follow-up is flat neutral praise ("nice work", "deserves a raise") with no flirty pull — rewrite the whole item with smooth, flirty all three lines.'
+    }
+  }
+  return ''
+}
+
+export function buildStyleFixMessages(
+  message: string,
+  language: string,
+  vibes: string[],
+  scenario?: string
+) {
+  const langLine = languageLabel(language)
+  const list = vibes.map((v, i) => `${i + 1}. ${v}`).join('\n')
+  return [
+    { role: 'system', content: SYSTEM_PROMPT },
+    {
+      role: 'user',
+      content: `The message:
+"""
+${message}
+"""
+
+Some of these opening lines are too flat, contain the word "or", read mean, or have dead praise for the yes/no. Rewrite ONLY the vibes listed below in the icebreaker style: a cheeky, out-of-nowhere YES/NO question that works on anyone and has no "or" in it; the "yes" line is the smooth reveal that lands the joke; the "no" line pivots the same theme with a foot in the door. No flat praise ('nice work'), nothing creepy, and the tease must be an INVERTED COMPLIMENT — she smiles, never mocked (never 'Did you steal that smile from a toothpaste commercial?', and never nonsense word-salad that doesn't land). Make each rewritten line clearly DIFFERENT from every other line (varied phrasing, not the same template repeated).
+
+${scenarioJsonShape(scenario)}
 
 Vibes to rewrite:
 ${list}
@@ -303,8 +395,16 @@ export function buildContextUserPrompt(
     ? `\nThe exact message I want to reply to (or my note):\n"""\n${note.trim()}\n"""`
     : ''
   const taskLine = hasNote
-    ? 'The note above is the exact message to reply to.'
-    : "The person's last message in the TRANSCRIPT is what I need to reply to."
+    ? scenario === 'icebreaker'
+      ? 'The note above is the exact message to reply to (or context to use for the opening line).'
+      : 'The note above is the exact message to reply to.'
+    : scenario === 'icebreaker'
+      ? "You're opening the conversation cold — use the screenshot (profile, story, photo) to come up with the opening line."
+      : "The person's last message in the TRANSCRIPT is what I need to reply to."
+  const rulesLine =
+    scenario === 'icebreaker'
+      ? 'Rules: sound like a real, charming person sending a first message. The opening line IS the pickup line — honest, specific and funny, never gross or try-hard, no generic compliments, no emoji spam.'
+      : 'Rules: sound like a real person texting, never cringe or try-hard, no pickup lines, no generic compliments, no emoji spam, and reference something specific so it clearly fits the conversation.'
   const languageBars = specific
     ? `\n\nCRITICAL: Every one of the ${vibes.length} replies MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if a reply comes out in the wrong language, rewrite the whole reply before including it.`
     : ''
@@ -317,14 +417,13 @@ ${noteLine}
 ${taskLine}
 ${scenarioBlock(scenario)}
 
-Rules: sound like a real person texting, never cringe or try-hard, no pickup lines, no generic compliments, no emoji spam, and reference something specific so it clearly fits the conversation.
+${rulesLine}
 
 ${personNote('context')}
 
 Reply language: ${langLine}${languageBars}
 
-Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every item must look exactly like this:
-{"vibe":"<the vibe>","reply":"<the reply text>"}
+Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. ${scenarioJsonShape(scenario)}
 
 Vibes in order:
 ${list}
@@ -362,8 +461,17 @@ export function buildContextSwapUserPrompt(
     ? `\nThe exact message I want to reply to (or my note):\n"""\n${note.trim()}\n"""`
     : ''
   const taskLine = hasNote
-    ? 'The note above is the exact message to reply to.'
-    : "The person's last message in the TRANSCRIPT is what I want to reply to."
+    ? scenario === 'icebreaker'
+      ? 'The note above is the exact message to reply to (or context to use for the opening line).'
+      : 'The note above is the exact message to reply to.'
+    : scenario === 'icebreaker'
+      ? "You're opening the conversation cold — use the screenshot (profile, story, photo) to come up with the opening line."
+      : "The person's last message in the TRANSCRIPT is what I want to reply to."
+  const outSpec =
+    scenario === 'icebreaker'
+      ? `Open with a cheeky, out-of-nowhere YES/NO question that could work on anyone — a bit random and charming, nobody sees it coming ('Is your dad a thief?' style, short and smooth). The question MUST NOT contain the word 'or' — one clean question, no second option. Then the "yes" line delivers the smooth reveal that lands the joke ('I knew it — he stole the stars and put them in your eyes.'), and the "no" line pivots the same theme with a foot in the door, never grovelling ('Then who stole your heart... because I want to know who I'm up against.'). NO flat praise like 'Nice work', nothing creepy or over the line, and the tease must ALWAYS be an inverted compliment — never mock her or make it sound like a slight ('Did you steal that smile from a toothpaste commercial?' is mean; never nonsense either). Return ONLY this JSON object — no markdown, no extra words:
+{"reply":"<the first DM — one clean simple YES/NO question, no 'or'>","yes":"<follow-up if she says yes>","no":"<follow-up if she says no>"}`
+      : `Write exactly one reply with that vibe. Reply with ONLY the reply text — no quotes, no labels, no explanation. Sound like a real person, never cringe, no pickup lines, no generic compliments, and reference something specific so it fits the conversation.`
   return `A screenshot of a real conversation was read by a vision model. Here is exactly what it shows:
 """
 ${transcript}
@@ -378,7 +486,58 @@ ${personNote('context')}
 Vibe you must use: ${vibe}
 Reply language: ${langLine}
 
-Write exactly one reply with that vibe. Reply with ONLY the reply text — no quotes, no labels, no explanation. Sound like a real person, never cringe, no pickup lines, no generic compliments, and reference something specific so it fits the conversation.`
+${outSpec}`
+}
+
+export function buildSwapUserPrompt(
+  message: string,
+  language: string,
+  vibe: string,
+  scenario?: string
+) {
+  const langLine =
+    !language || language === 'auto' ? 'the same language she wrote in' : languageLabel(language)
+  const outSpec =
+    scenario === 'icebreaker'
+      ? `Open with a cheeky, out-of-nowhere YES/NO question that could work on anyone — a bit random and charming, nobody sees it coming ('Is your dad a thief?' style, short and smooth). The question MUST NOT contain the word 'or' — one clean question, no second option. Then the "yes" line delivers the smooth reveal that lands the joke ('I knew it — he stole the stars and put them in your eyes.'), and the "no" line pivots the same theme with a foot in the door, never grovelling ('Then who stole your heart... because I want to know who I'm up against.'). NO flat praise like 'Nice work', nothing creepy or over the line, and the tease must ALWAYS be an inverted compliment — never mock her or make it sound like a slight ('Did you steal that smile from a toothpaste commercial?' is mean; never nonsense either). Return ONLY this JSON object — no markdown, no extra words:
+{"reply":"<the first DM — one clean simple YES/NO question, no 'or'>","yes":"<follow-up if she says yes>","no":"<follow-up if she says no>"}`
+      : `Write exactly one reply with that vibe. Reply with ONLY the reply text — no quotes, no labels, no explanation. Sound like a real person, never cringe, no pickup lines, no generic compliments, and reference something specific so it fits the message.`
+  const hasMsg = !!message.trim()
+  const head = hasMsg
+    ? `The message:
+"""
+${message}
+"""`
+    : scenario === 'icebreaker'
+      ? 'There is no incoming message yet — you are opening the conversation cold (first DM).'
+      : `The message:
+"""
+${message}
+"""`
+  return `${head}
+${scenarioBlock(scenario)}
+
+Reply language: ${langLine}
+Vibe you must use: ${vibe}
+
+${outSpec}`
+}
+
+export function parseSwapReply(raw: string, icebreaker: boolean) {
+  const text = String(raw || '').trim()
+  const clean = (s: string) => s.replace(/^("|'|«|“)|("|'|»|”)$/g, '').trim()
+  if (!icebreaker) return { reply: clean(text), yes: '', no: '' }
+  const arr = extractJSON(text)
+  const obj = Array.isArray(arr) ? arr.find((x: any) => x && typeof x === 'object') : null
+  const pick = clean(obj ? String(obj.reply || obj.pickup || '') : '')
+  if (pick) {
+    return {
+      reply: pick,
+      yes: clean(obj ? String(obj.yes || '') : ''),
+      no: clean(obj ? String(obj.no || '') : ''),
+    }
+  }
+  return { reply: clean(text), yes: '', no: '' }
 }
 
 export function buildContextSwapMessages(

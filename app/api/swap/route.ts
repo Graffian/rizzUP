@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   SYSTEM_PROMPT,
   buildContextSwapUserPrompt,
-  languageLabel,
+  buildSwapUserPrompt,
   looksLikeHinglish,
-  scenarioBlock,
+  openingIssue,
+  parseSwapReply,
   transcriptThemLines,
 } from '@/lib/ai'
 import { defaultModel, hfChat, readEnv, transcribeImage } from '@/lib/hf'
@@ -27,8 +28,9 @@ export async function POST(req: NextRequest) {
   const scenario = String(body.scenario || '').trim()
   const vibe = String(body.vibe || 'Smooth & confident').trim()
   const language = String(body.language || 'auto')
+  const icebreaker = scenario === 'icebreaker'
 
-  if (!message && !image) {
+  if (!message && !image && scenario !== 'icebreaker') {
     return NextResponse.json(
       { error: 'Paste a message or attach a screenshot.' },
       { status: 400 }
@@ -70,19 +72,8 @@ export async function POST(req: NextRequest) {
       !hinglishMode &&
       !/\p{Script=Devanagari}/u.test(themText)
   } else {
-    const langLine =
-      !language || language === 'auto' ? 'the same language she wrote in' : languageLabel(language)
-    buildSwapPrompt = (extra = '') =>
-      `The message:
-"""
-${message}
-"""
-${scenarioBlock(scenario)}
-
-Reply language: ${langLine}
-Vibe you must use: ${vibe}
-${extra}
-Write exactly one reply with that vibe. Reply with ONLY the reply text — no quotes, no labels, no explanation.`
+    const base = buildSwapUserPrompt(message, language, vibe, scenario)
+    buildSwapPrompt = (extra = '') => (extra ? `${base}\n\n${extra}` : base)
     hinglishMode = language === 'Hinglish' || looksLikeHinglish(message)
     englishMode =
       (language === 'auto' || language === 'English') &&
@@ -97,13 +88,35 @@ Write exactly one reply with that vibe. Reply with ONLY the reply text — no qu
 
   try {
     const { text, model: usedModel } = await hfChat(token, model, messages, 3)
-    let reply = text.trim()
-    reply = reply.replace(/^("|'|«|“)|("|'|»|”)$/g, '').trim()
-    if (!reply) {
+    let result = parseSwapReply(text, icebreaker)
+    if (!result.reply) {
       return NextResponse.json({ error: 'Model returned no text.' }, { status: 502 })
     }
 
-    if (hinglishMode && !looksLikeHinglish(reply)) {
+    if (icebreaker && openingIssue(result)) {
+      try {
+        const retry = await hfChat(
+          token,
+          model,
+          [
+            { role: 'system', content: SYSTEM_PROMPT },
+            {
+              role: 'user',
+              content: buildSwapPrompt(
+                `Rewrite the OPENING LINE in the icebreaker style: a cheeky, out-of-nowhere YES/NO question with NO "or" in it — one clean question, no second option. Then the "yes" line delivers the smooth reveal that lands the joke, and the "no" line pivots the same theme with a foot in the door (no flat praise, nothing over the line). Keep all three short and playful.`
+              ),
+            },
+          ],
+          3
+        )
+        const fixed = parseSwapReply(retry.text, icebreaker)
+        if (fixed.reply && !openingIssue(fixed)) result = fixed
+      } catch {
+        // keep original reply if the retry fails
+      }
+    }
+
+    if (hinglishMode && !looksLikeHinglish(result.reply)) {
       try {
         const retry = await hfChat(
           token,
@@ -119,12 +132,12 @@ Write exactly one reply with that vibe. Reply with ONLY the reply text — no qu
           ],
           3
         )
-        const fixed = retry.text.trim().replace(/^("|'|«|“)|("|'|»|”)$/g, '').trim()
-        if (fixed && looksLikeHinglish(fixed)) reply = fixed
+        const fixed = parseSwapReply(retry.text, icebreaker)
+        if (fixed.reply && looksLikeHinglish(fixed.reply)) result = fixed
       } catch {
         // keep original reply if the retry fails
       }
-    } else if (englishMode && looksLikeHinglish(reply)) {
+    } else if (englishMode && looksLikeHinglish(result.reply)) {
       try {
         const retry = await hfChat(
           token,
@@ -140,14 +153,18 @@ Write exactly one reply with that vibe. Reply with ONLY the reply text — no qu
           ],
           3
         )
-        const fixed = retry.text.trim().replace(/^("|'|«|“)|("|'|»|”)$/g, '').trim()
-        if (fixed && !looksLikeHinglish(fixed)) reply = fixed
+        const fixed = parseSwapReply(retry.text, icebreaker)
+        if (fixed.reply && !looksLikeHinglish(fixed.reply)) result = fixed
       } catch {
         // keep original reply if the retry fails
       }
     }
 
-    return NextResponse.json({ model: usedModel, reply })
+    return NextResponse.json({
+      model: usedModel,
+      reply: result.reply,
+      ...(result.yes ? { yes: result.yes, no: result.no } : {}),
+    })
   } catch (e: any) {
     const status = e?.status && e.status >= 400 && e.status <= 599 ? e.status : 500
     return NextResponse.json(

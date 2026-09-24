@@ -4,7 +4,9 @@ import {
   buildContextMessages,
   buildFixMessages,
   buildMessages,
+  buildStyleFixMessages,
   looksLikeHinglish,
+  openingIssue,
   parseReplies,
   transcriptThemLines,
 } from '@/lib/ai'
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
   let count = parseInt(body.count, 10) || 3
   count = Math.min(Math.max(count, 1), 5)
 
-  if (!message && !image) {
+  if (!message && !image && scenario !== 'icebreaker') {
     return NextResponse.json(
       { error: 'Paste a message or attach a screenshot.' },
       { status: 400 }
@@ -93,16 +95,16 @@ export async function POST(req: NextRequest) {
     const { text, model: usedModel } = await hfChat(token, model, genMessages)
     let replies = parseReplies(text, vibes)
 
-    const backfill = async (
-      lang: string,
-      keep: (r: { vibe: string; reply: string }) => boolean
+    const fill = async (
+      makeFix: (missing: string[]) => Array<{ role: string; content: string }>,
+      keep: (r: { vibe: string; reply: string; yes?: string; no?: string }) => boolean
     ) => {
       const accepted = replies.filter(keep)
       for (let round = 0; round < 2 && accepted.length < vibes.length; round++) {
         const missing = vibes.filter((v) => !accepted.some((r) => r.vibe === v))
         if (!missing.length) break
         try {
-          const fixed = await hfChat(token, model, buildFixMessages(fixText, lang, missing))
+          const fixed = await hfChat(token, model, makeFix(missing))
           const fixedReplies = parseReplies(fixed.text, missing).filter(keep)
           for (const fr of fixedReplies) {
             if (accepted.length < vibes.length && !accepted.some((r) => r.vibe === fr.vibe)) {
@@ -115,13 +117,35 @@ export async function POST(req: NextRequest) {
       }
       return vibes
         .map((v) => accepted.find((r) => r.vibe === v))
-        .filter((r): r is { vibe: string; reply: string } => !!r)
+        .filter(
+          (r): r is { vibe: string; reply: string; yes?: string; no?: string } => !!r
+        )
     }
 
-    if (hinglishMode && replies.length) {
-      replies = await backfill('Hinglish', (r) => looksLikeHinglish(r.reply))
-    } else if (englishMode && replies.length) {
-      replies = await backfill('English', (r) => !looksLikeHinglish(r.reply))
+    if (replies.length) {
+      if (hinglishMode) {
+        replies = await fill(
+          (missing) => buildFixMessages(fixText, 'Hinglish', missing, scenario),
+          (r) => looksLikeHinglish(r.reply)
+        )
+      } else if (englishMode) {
+        replies = await fill(
+          (missing) => buildFixMessages(fixText, 'English', missing, scenario),
+          (r) => !looksLikeHinglish(r.reply)
+        )
+      }
+      if (scenario === 'icebreaker') {
+        replies = await fill(
+          (missing) =>
+            buildStyleFixMessages(
+              fixText,
+              language === 'auto' ? 'English' : language,
+              missing,
+              scenario
+            ),
+          (r) => !openingIssue(r)
+        )
+      }
     }
 
     if (!replies.length) {

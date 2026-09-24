@@ -8,7 +8,7 @@ import {
 } from 'react'
 import { SCENARIOS } from '@/lib/ai'
 
-type Reply = { vibe: string; reply: string }
+type Reply = { vibe: string; reply: string; yes?: string; no?: string }
 type Theme = 'light' | 'dark' | 'system'
 type Prefs = {
   token: string
@@ -47,16 +47,21 @@ const initialPrefs: Prefs = {
 
 function loadPrefs(): Prefs {
   if (typeof window === 'undefined') return initialPrefs
-  let stored: Prefs | null = null
+  let stored: Partial<Prefs> | null = null
   try {
     stored = JSON.parse(localStorage.getItem('rz_prefs') || 'null')
   } catch {
-    // ignore corrupt storage
+    stored = null
   }
+  const scenario =
+    stored?.scenario && SCENARIOS.some((s) => s.id === stored!.scenario)
+      ? (stored!.scenario as string)
+      : 'icebreaker'
   return {
     ...initialPrefs,
     ...(stored || {}),
-    theme: stored?.theme === 'dark' || stored?.theme === 'system' ? stored.theme : 'light',
+    scenario,
+    theme: stored?.theme === 'dark' || stored?.theme === 'system' ? stored!.theme : 'light',
   }
 }
 
@@ -110,7 +115,7 @@ function errorMessage(err: unknown): string {
 }
 
 export default function RizzApp() {
-  const [prefs, setPrefs] = useState<Prefs>(loadPrefs)
+  const [prefs, setPrefs] = useState<Prefs>(initialPrefs)
   const [showSettings, setShowSettings] = useState(false)
   const [message, setMessage] = useState('')
   const [image, setImage] = useState<string | null>(null)
@@ -138,6 +143,10 @@ export default function RizzApp() {
     setToast({ msg, err })
     if (toastTimer.current) clearTimeout(toastTimer.current)
     toastTimer.current = setTimeout(() => setToast(null), 3200)
+  }, [])
+
+  useEffect(() => {
+    setPrefs(loadPrefs())
   }, [])
 
   useEffect(() => {
@@ -223,7 +232,7 @@ export default function RizzApp() {
   const gen = useCallback(async () => {
     if (busy) return
     const msg = message.trim()
-    if (!msg && !image) {
+    if (!msg && !image && prefs.scenario !== 'icebreaker') {
       showToast('paste a message or attach a screenshot', true)
       taRef.current?.focus()
       return
@@ -285,7 +294,11 @@ export default function RizzApp() {
         if (!res.ok) throw new Error(data.error || 'Request failed')
         setReplies((prev) =>
           prev
-            ? prev.map((r, i) => (i === index ? { ...r, reply: data.reply } : r))
+            ? prev.map((r, i) =>
+                i === index
+                  ? { ...r, reply: data.reply, yes: data.yes, no: data.no }
+                  : r
+              )
             : prev
         )
       } catch (err) {
@@ -618,7 +631,7 @@ export default function RizzApp() {
               }}
               rows={3}
               maxLength={1000}
-              placeholder={image ? 'optional — add a note or the exact message…' : 'what they sent…'}
+              placeholder={image ? 'optional — add a note or the exact message…' : prefs.scenario === 'icebreaker' ? 'optional — leave blank to open cold, or add a photo/story context…' : 'what they sent…'}
               spellCheck
               className="min-h-[128px] w-full resize-y rounded-[18px] border-2 border-line bg-ink2/80 px-4 py-4 text-[16px] leading-relaxed text-paper outline-none transition placeholder:text-faint focus:border-rust focus:ring-4 focus:ring-rust/10"
             />
@@ -755,6 +768,46 @@ export default function RizzApp() {
                     <p className="whitespace-pre-wrap break-words text-[16px] leading-relaxed text-paper/90">
                       {r.reply}
                     </p>
+                    {(r.yes || r.no) && (
+                      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+                        {r.yes && (
+                          <div className="rounded-xl border-2 border-line2/70 bg-ink2/40 p-3">
+                            <p className="flex items-center justify-between gap-2">
+                              <span className="text-[10px] font-bold tracking-[0.08em] text-emerald-500 uppercase">
+                                if yes
+                              </span>
+                              <button
+                                onClick={(e) => copy(r.yes!, e.currentTarget)}
+                                className="rounded-md border border-line2 px-1.5 py-0.5 font-body text-[10px] font-bold text-muted transition hover:border-emerald-500/60 hover:text-emerald-500"
+                              >
+                                <span data-copy-label>copy</span>
+                              </button>
+                            </p>
+                            <p className="mt-1.5 text-[13.5px] leading-relaxed text-paper/85">
+                              {r.yes}
+                            </p>
+                          </div>
+                        )}
+                        {r.no && (
+                          <div className="rounded-xl border-2 border-line2/70 bg-ink2/40 p-3">
+                            <p className="flex items-center justify-between gap-2">
+                              <span className="text-[10px] font-bold tracking-[0.08em] text-rust uppercase">
+                                if no
+                              </span>
+                              <button
+                                onClick={(e) => copy(r.no!, e.currentTarget)}
+                                className="rounded-md border border-line2 px-1.5 py-0.5 font-body text-[10px] font-bold text-muted transition hover:border-rust/60 hover:text-rust"
+                              >
+                                <span data-copy-label>copy</span>
+                              </button>
+                            </p>
+                            <p className="mt-1.5 text-[13.5px] leading-relaxed text-paper/85">
+                              {r.no}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="mt-4 flex items-center gap-2">
                       <button
                         onClick={(e) => copy(r.reply, e.currentTarget)}
