@@ -21,14 +21,14 @@ Local vars live in `.env`, production vars go in **Netlify → Site settings →
 
 ## 2. Dodo Payments (merchant + product)
 
-1. Register at dodopayments.com, then in the dashboard:
+1. Register with Dodo Payments, then in the dashboard:
    - **Products → Create product → Subscription**, price **₹499 / month** (min for subscriptions is $1/mo). Save and copy the `product_id`.
    - **Developer → API** → copy the API key.
    - **Developer → Webhooks → Add webhook**:
      - URL: `https://<your-netlify-site>/api/webhooks/dodo`
      - Events: `subscription.active`, `subscription.renewed`, `subscription.paused`, `subscription.unpaused`, `subscription.on_hold`, `subscription.cancelled`, `subscription.expired`, `subscription.failed`, `subscription.plan_changed`, `subscription.updated`, `payment.succeeded`
      - Copy the **webhook secret key**.
-2. Dodo has test mode (uses `test.dodopayments.com` + test cards) — build against that first, flip to live later.
+2. Dodo has test mode (test environment, `test.*` hosts + test cards) — build against that first, flip to live later.
 
 ## 3. Environment variables
 
@@ -39,7 +39,7 @@ Local vars live in `.env`, production vars go in **Netlify → Site settings →
 | `DODO_PAYMENTS_API_KEY` | Netlify + `.env` | private |
 | `DODO_WEBHOOK_KEY` | Netlify + `.env` | matches the webhook secret |
 | `DODO_SUBSCRIPTION_PRODUCT_ID` | Netlify + `.env` | from the product |
-| `DODO_API_BASE` | Netlify + `.env` | `https://test.dodopayments.com` until live, then `https://live.dodopayments.com` |
+| `DODO_API_BASE` | Netlify + `.env` | the API host assigned in your environment (`test.*` until live, then the live host) |
 
 > **Pricing display:** the Dodo product is priced **USD $6/month** (verified on the
 > product). The unlock modal shows a **locale-aware price** — `≈₹575` for Indian

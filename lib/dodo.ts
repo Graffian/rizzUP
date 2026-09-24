@@ -1,4 +1,4 @@
-const DODO_API_BASE = process.env.DODO_API_BASE || 'https://test.dodopayments.com'
+const DODO_API_BASE = process.env.DODO_API_BASE || ''
 
 export type CheckoutResult = { checkoutUrl: string; sessionId: string }
 
@@ -9,7 +9,7 @@ export async function createCheckoutSession(
 ): Promise<CheckoutResult> {
   const apiKey = process.env.DODO_PAYMENTS_API_KEY
   const productId = process.env.DODO_SUBSCRIPTION_PRODUCT_ID
-  if (!apiKey || !productId) {
+  if (!apiKey || !productId || !DODO_API_BASE) {
     throw new Error('Dodo payments are not configured yet.')
   }
 
