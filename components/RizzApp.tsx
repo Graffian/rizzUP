@@ -95,7 +95,7 @@ const LANGUAGES = [
 
 const initialPrefs: Prefs = {
   token: '',
-  model: 'deepseek-ai/DeepSeek-V3-0324',
+  model: 'gemini-flash-latest',
   lang: 'auto',
   count: '3',
   theme: 'light',
@@ -163,7 +163,7 @@ function errorMessage(err: unknown): string {
     return 'Invalid token. Get a free one at huggingface.co/settings/tokens.'
   }
   if (/404|doesn't exist|not found|not supported/i.test(m)) {
-    return "That model isn't enabled on your account. Try deepseek-ai/DeepSeek-V3-0324."
+    return "That model isn't supported. Try gemini-flash-latest."
   }
   if (/429|rate limit/i.test(m)) {
     return 'Free tier rate limit hit — wait a few seconds and try again.'
@@ -643,13 +643,13 @@ export default function RizzApp() {
                   type="text"
                   value={prefs.model}
                   onChange={(e) => setPrefs((p) => ({ ...p, model: e.target.value }))}
-                  placeholder="deepseek-ai/DeepSeek-V3-0324"
+                  placeholder="gemini-flash-latest"
                   spellCheck={false}
                   className="mt-2 w-full rounded-[14px] border-2 border-line bg-ink2/80 px-3.5 py-3 font-body text-[12px] text-paper outline-none transition focus:border-rust focus:ring-2 focus:ring-rust/10 placeholder:text-faint"
                 />
                 <p className="mt-2 text-[12px] leading-relaxed text-faint">
-                  Any chat model enabled on your HF account. Default:
-                  DeepSeek-V3.
+                  Powered by Gemini — no token needed. Default:
+                  gemini-flash-latest. (HF models still work here.)
                 </p>
               </div>
             </div>

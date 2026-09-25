@@ -16,7 +16,7 @@ import {
   missingDeviceResponse,
   paywallEnabled,
 } from '@/lib/auth'
-import { defaultModel, hfChat, readEnv, transcribeImage } from '@/lib/hf'
+import { chat, geminiApiKey, readEnv, resolveModel, transcribeImage } from '@/lib/hf'
 
 const MAX_IMAGE_CHARS = 3_000_000
 
@@ -29,8 +29,7 @@ export async function POST(req: NextRequest) {
   }
 
   const token = String(body.token || readEnv('HF_TOKEN') || '').trim()
-  const dModel = defaultModel()
-  const model = String(body.model || dModel).trim() || dModel
+  const model = resolveModel(body.model)
   const message = String(body.message || '').trim()
   const image = String(body.image || '').trim()
   const scenario = String(body.scenario || '').trim()
@@ -50,7 +49,7 @@ export async function POST(req: NextRequest) {
       { status: 413 }
     )
   }
-  if (!token) {
+  if (!token && !geminiApiKey()) {
     return NextResponse.json(
       { error: 'No Hugging Face token configured.' },
       { status: 401 }
@@ -106,38 +105,46 @@ export async function POST(req: NextRequest) {
   ]
 
   try {
-    const { text, model: usedModel } = await hfChat(token, model, messages, 3)
+    const { text, model: usedModel } = await chat(token, model, messages, 3)
     let result = parseSwapReply(text, icebreaker)
     if (!result.reply) {
       return NextResponse.json({ error: 'Model returned no text.' }, { status: 502 })
     }
 
     if (icebreaker && openingIssue(result)) {
-      try {
-        const retry = await hfChat(
-          token,
-          model,
-          [
-            { role: 'system', content: SYSTEM_PROMPT },
-            {
-              role: 'user',
-              content: buildSwapPrompt(
-                `Rewrite the OPENING LINE in the icebreaker style: a cheeky, out-of-nowhere YES/NO question with NO "or" in it — one clean question, no second option. Then the "yes" line delivers the smooth reveal that lands the joke, and the "no" line pivots the same theme with a foot in the door (no flat praise, nothing over the line). Keep all three short and playful.`
-              ),
-            },
-          ],
-          3
-        )
-        const fixed = parseSwapReply(retry.text, icebreaker)
-        if (fixed.reply && !openingIssue(fixed)) result = fixed
-      } catch {
-        // keep original reply if the retry fails
+      let fixed = result
+      for (let attempt = 0; attempt < 2 && openingIssue(fixed); attempt++) {
+        try {
+          const retry = await chat(
+            token,
+            model,
+            [
+              { role: 'system', content: SYSTEM_PROMPT },
+              {
+                role: 'user',
+                content: buildSwapPrompt(
+                  `Rewrite the OPENING LINE in the icebreaker style. The word "or" is ABSOLUTELY FORBIDDEN — no "either", no second option, no "…or…". Write ONE clean yes/no question in 4 to 8 words, then the "yes" line keeps the conversation going the way a confident person naturally would, and the "no" line pivots the same theme with a foot in the door — no flat praise, nothing over the line, no recycled pickup lines ('Is your dad a thief?', 'Did it hurt when you fell from heaven?', 'Is that your natural smile?'). Read the question back to yourself: if the word "or" appears anywhere, rewrite it without "or" before sending. Keep all three lines short and playful.`
+                ),
+              },
+            ],
+            3
+          )
+          const candidate = parseSwapReply(retry.text, icebreaker)
+          if (candidate.reply && !openingIssue(candidate)) {
+            fixed = candidate
+          } else {
+            break
+          }
+        } catch {
+          break
+        }
       }
+      result = fixed
     }
 
     if (hinglishMode && !looksLikeHinglish(result.reply)) {
       try {
-        const retry = await hfChat(
+        const retry = await chat(
           token,
           model,
           [
@@ -158,7 +165,7 @@ export async function POST(req: NextRequest) {
       }
     } else if (englishMode && looksLikeHinglish(result.reply)) {
       try {
-        const retry = await hfChat(
+        const retry = await chat(
           token,
           model,
           [

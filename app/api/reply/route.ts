@@ -20,9 +20,10 @@ import {
   paywallEnabled,
 } from '@/lib/auth'
 import {
-  defaultModel,
-  hfChat,
+  chat,
+  geminiApiKey,
   readEnv,
+  resolveModel,
   transcribeImage,
 } from '@/lib/hf'
 
@@ -37,8 +38,7 @@ export async function POST(req: NextRequest) {
   }
 
   const token = String(body.token || readEnv('HF_TOKEN') || '').trim()
-  const dModel = defaultModel()
-  const model = String(body.model || dModel).trim() || dModel
+  const model = resolveModel(body.model)
   const message = String(body.message || '').trim()
   const image = String(body.image || '').trim()
   const scenario = String(body.scenario || '').trim()
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       { status: 413 }
     )
   }
-  if (!token) {
+  if (!token && !geminiApiKey()) {
     return NextResponse.json(
       { error: 'No Hugging Face token. Add a free one at huggingface.co/settings/tokens and save it in Settings.' },
       { status: 401 }
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { text, model: usedModel } = await hfChat(token, model, genMessages)
+    const { text, model: usedModel } = await chat(token, model, genMessages)
     let replies = parseReplies(text, vibes)
 
     const fill = async (
@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
         const missing = vibes.filter((v) => !accepted.some((r) => r.vibe === v))
         if (!missing.length) break
         try {
-          const fixed = await hfChat(token, model, makeFix(missing))
+          const fixed = await chat(token, model, makeFix(missing))
           const fixedReplies = parseReplies(fixed.text, missing).filter(keep)
           for (const fr of fixedReplies) {
             if (accepted.length < vibes.length && !accepted.some((r) => r.vibe === fr.vibe)) {
