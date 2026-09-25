@@ -148,8 +148,14 @@ export function parseReplies(raw: string, vibes: string[]) {
   if (!out.length) {
     const parts = String(raw)
       .split(/\n{2,}|(?=\d[.)]\s)/)
-      .map((s) => s.trim())
-      .filter((s) => s && !/^[\{\[]/.test(s) && !/"reply"\s*:/i.test(s))
+      .map((s) => s.replace(/^\s*[-*•>]\s*/, '').trim())
+      .filter(
+        (s) =>
+          s &&
+          !/^[\{\[]/.test(s) &&
+          !/"reply"\s*:/i.test(s) &&
+          !/^(here'?s|here is|the rewritten version|some of these|rewrite|vibes to rewrite|note:|please|okay?|sure|done|got it)\b/i.test(s)
+      )
     parts.slice(0, vibes.length).forEach((p, i) => {
       out.push({ vibe: vibes[i] || 'Reply', reply: p.replace(/^\d+[.)]\s*/, '') })
     })
@@ -209,6 +215,45 @@ The "reply" is a cheeky, spontaneous YES/NO question that feels like something y
 {"vibe":"<the vibe>","reply":"<the reply text>"}`
 }
 
+export interface DetectedScenario {
+  id: string
+  tag: string
+  title: string
+  blank: boolean
+}
+
+export function detectScenario(
+  transcript: string | null | undefined,
+  hasMessage: boolean
+): DetectedScenario {
+  const t = String(transcript || '').trim()
+  if (!t) {
+    return hasMessage
+      ? { id: '', tag: '', title: 'Reply', blank: false }
+      : { id: 'icebreaker', tag: 'SCENARIO 01', title: 'The Icebreaker', blank: true }
+  }
+  if (/transcript\s*:\s*none/i.test(t)) {
+    return { id: 'icebreaker', tag: 'SCENARIO 01', title: 'The Icebreaker', blank: false }
+  }
+  const transHead = t.search(/^transcript\s*:/im)
+  const body = transHead >= 0 ? t.slice(transHead) : t
+  const lines = body
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (/^you\s*:/i.test(lines[i])) {
+      return { id: 'comeback', tag: 'SCENARIO 02', title: 'The Comeback', blank: false }
+    }
+    if (/^them\s*:/i.test(lines[i])) {
+      return { id: '', tag: '', title: 'Reply', blank: false }
+    }
+  }
+  return { id: '', tag: '', title: 'Reply', blank: false }
+}
+
+export const ICEBREAKER_BLANK_NOTE = `There is no screenshot and no note — nothing specific to reference, so you are opening cold with ZERO context: fall back to a standalone, timeless pickup line that works completely on its own. Make it fresh and smooth — not one everyone's heard ('Is your dad a thief?', 'Did it hurt when you fell from heaven?', 'Is that your natural smile?' still banned). No 'or' in the question (rewrite until there isn't), no flat praise, and the tease must stay an inverted compliment — she smiles, never mocked. Question in 4 to 8 words. The "yes" and "no" lines are still the natural bounce as specified above.`
+
 export function buildUserPrompt(
   message: string,
   language: string,
@@ -230,6 +275,10 @@ export function buildUserPrompt(
     hasMsg && message.trim().split(/\s+/).length <= 2 && message.trim().length <= 15
       ? '\n\nThis message is very short. Reply short, casual and lightly flirty, like two people already comfortable with each other — never formal or surprised.'
       : ''
+  const softMeetup =
+    scenario === 'icebreaker'
+      ? ''
+      : ' If the conversation is warm and going well, you can naturally steer toward meeting up — low-pressure, specific, with an easy out. Never force it.'
   const head = hasMsg
     ? `The message:
 """
@@ -248,7 +297,7 @@ Reply language: ${langLine}${languageBars}${englishNote}${shortNote}
 
 ${personNote('text')}
 
-Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every reply must be short, spoken, natural — one quick sentence (two only if the joke needs it), under ~15 words, no dramatic setups and no trailing "or am I...?" rhetorical tags. Every reply must visibly flirt — signal interest in HER, land on her, compliment-adjacent, forward. Banned: cold observations, verdicts or reviews of the situation that could be sent to anyone ('Diagnosis: too much blue dress in my feed'). If her last line is a question, each reply answers it and lands the payoff — verdict frames ('Diagnosis:', 'Plot twist:', 'Just checking if…') are banned. Type the way you'd actually reply off the top of your head. ${scenarioJsonShape(scenario)}
+Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every reply must be short, spoken, natural — one quick sentence (two only if the joke needs it), under ~15 words, no dramatic setups and no trailing "or am I...?" rhetorical tags. Every reply must visibly flirt — signal interest in HER, land on her, compliment-adjacent, forward. Banned: cold observations, verdicts or reviews of the situation that could be sent to anyone ('Diagnosis: too much blue dress in my feed'). If her last line is a question, each reply answers it and lands the payoff — verdict frames ('Diagnosis:', 'Plot twist:', 'Just checking if…') are banned. Type the way you'd actually reply off the top of your head.${softMeetup} ${scenarioJsonShape(scenario)}
 
 Vibes in order:
 ${list}
@@ -466,6 +515,10 @@ export function buildContextUserPrompt(
     scenario === 'icebreaker'
       ? 'Rules: sound like a real, charming person sending a first message. The opening line IS the pickup line — honest, specific and funny, never gross or try-hard, no generic compliments, no emoji spam.'
       : 'Rules: sound like a real person texting, never cringe or try-hard, no pickup lines, no generic compliments, no emoji spam, and reference something specific so it clearly fits the conversation.'
+  const softMeetup =
+    scenario === 'icebreaker'
+      ? ''
+      : ' If the conversation is warm and going well, you can naturally steer toward meeting up — low-pressure, specific, with an easy out. Never force it.'
   const languageBars = specific
     ? `\n\nCRITICAL: Every one of the ${vibes.length} replies MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if a reply comes out in the wrong language, rewrite the whole reply before including it.`
     : ''
@@ -484,7 +537,7 @@ ${personNote('context')}
 
 Reply language: ${langLine}${languageBars}
 
-Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every reply must be short, spoken, natural — one quick sentence (two only if the joke needs it), under ~15 words, no dramatic setups and no trailing "or am I...?" rhetorical tags. Every reply must visibly flirt — signal interest in HER, land on her, compliment-adjacent, forward. Banned: cold observations, verdicts or reviews of the situation that could be sent to anyone ('Diagnosis: too much blue dress in my feed'). If her last line is a question, each reply answers it and lands the payoff — verdict frames ('Diagnosis:', 'Plot twist:', 'Just checking if…') are banned. Type the way you'd actually reply off the top of your head. ${scenarioJsonShape(scenario)}
+Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every reply must be short, spoken, natural — one quick sentence (two only if the joke needs it), under ~15 words, no dramatic setups and no trailing "or am I...?" rhetorical tags. Every reply must visibly flirt — signal interest in HER, land on her, compliment-adjacent, forward. Banned: cold observations, verdicts or reviews of the situation that could be sent to anyone ('Diagnosis: too much blue dress in my feed'). If her last line is a question, each reply answers it and lands the payoff — verdict frames ('Diagnosis:', 'Plot twist:', 'Just checking if…') are banned. Type the way you'd actually reply off the top of your head.${softMeetup} ${scenarioJsonShape(scenario)}
 
 Vibes in order:
 ${list}

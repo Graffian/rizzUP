@@ -1,8 +1,8 @@
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 import { buildVisionTranscriptMessages } from '@/lib/ai'
-import { geminiApiKey, geminiChat } from '@/lib/gemini'
-export { geminiApiKey } from '@/lib/gemini'
+// import { geminiApiKey, geminiChat } from '@/lib/gemini'
+// export { geminiApiKey } from '@/lib/gemini'
 
 export class HFError extends Error {
   status: number
@@ -63,10 +63,11 @@ export function hfUrl(): string {
 export const LEGACY_DEFAULT_MODEL = 'deepseek-ai/DeepSeek-V3-0324'
 
 export function defaultModel(): string {
-  if (geminiApiKey()) return geminiModel()
+  // if (geminiApiKey()) return geminiModel()
   return readEnv('HF_MODEL') || LEGACY_DEFAULT_MODEL
 }
 
+/*
 export function geminiModel(): string {
   return readEnv('GEMINI_CHAT_MODEL') || 'gemini-flash-latest'
 }
@@ -74,6 +75,7 @@ export function geminiModel(): string {
 export function geminiVisionModel(): string {
   return readEnv('GEMINI_QUALITY_MODEL') || 'gemini-flash-latest'
 }
+*/
 
 export function resolveModel(clientModel: string): string {
   const m = String(clientModel || '').trim()
@@ -81,9 +83,11 @@ export function resolveModel(clientModel: string): string {
   return m
 }
 
+/*
 export function isGeminiModel(model: string): boolean {
   return /^gemini-/i.test(String(model || '').trim())
 }
+*/
 
 function withHfDirective(messages: ChatMessages): ChatMessages {
   return [
@@ -104,16 +108,17 @@ export async function chat(
   maxTokens = 700,
   temperature = 0.9
 ) {
-  const key = geminiApiKey()
-  if (key && isGeminiModel(model)) {
-    const tries = token ? 1 : maxTries
-    try {
-      return await geminiChat(key, model, messages, tries, maxTokens, temperature)
-    } catch (e) {
-      if (!token) throw e
-      // Gemini unavailable (rate limit, outage, bad key) → fall back to Hugging Face
-    }
-  }
+  // Gemini disabled — always use Hugging Face.
+  // const key = geminiApiKey()
+  // if (key && isGeminiModel(model)) {
+  //   const tries = token ? 1 : maxTries
+  //   try {
+  //     return await geminiChat(key, model, messages, tries, maxTokens, temperature)
+  //   } catch (e) {
+  //     if (!token) throw e
+  //     // Gemini unavailable (rate limit, outage, bad key) → fall back to Hugging Face
+  //   }
+  // }
   const hfModel = readEnv('HF_MODEL') || LEGACY_DEFAULT_MODEL
   return hfChat(token, hfModel, withHfDirective(messages), maxTries, maxTokens, temperature)
 }
@@ -187,24 +192,25 @@ export async function hfChat(
 }
 
 export async function transcribeImage(token: string, image: string): Promise<string> {
-  const key = geminiApiKey()
-  if (key) {
-    try {
-      const { text, model } = await geminiChat(
-        key,
-        geminiVisionModel(),
-        buildVisionTranscriptMessages(image),
-        4,
-        1200,
-        0.1
-      )
-      console.log(`[vision] interpreter: Gemini (${model})`)
-      const t = String(text || '').trim()
-      if (t && (t.includes('TRANSCRIPT') || /^PLATFORM\s*:/m.test(t))) return t
-    } catch {
-      // Gemini unavailable → fall through to the Hugging Face vision models
-    }
-  }
+  // Gemini vision disabled — always use the Hugging Face vision models.
+  // const key = geminiApiKey()
+  // if (key) {
+  //   try {
+  //     const { text, model } = await geminiChat(
+  //       key,
+  //       geminiVisionModel(),
+  //       buildVisionTranscriptMessages(image),
+  //       4,
+  //       1200,
+  //       0.1
+  //     )
+  //     console.log(`[vision] interpreter: Gemini (${model})`)
+  //     const t = String(text || '').trim()
+  //     if (t && (t.includes('TRANSCRIPT') || /^PLATFORM\s*:/m.test(t))) return t
+  //   } catch {
+  //     // Gemini unavailable → fall through to the Hugging Face vision models
+  //   }
+  // }
   let lastErr: HFError | null = null
   for (const visionModel of visionModelCandidates()) {
     try {

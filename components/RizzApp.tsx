@@ -6,17 +6,13 @@ import {
   useRef,
   useState,
 } from 'react'
-import { SCENARIOS } from '@/lib/ai'
 
 type Reply = { vibe: string; reply: string; yes?: string; no?: string }
 type Theme = 'light' | 'dark' | 'system'
 type Prefs = {
-  token: string
-  model: string
   lang: string
   count: string
   theme: Theme
-  scenario: string
 }
 type Access = {
   paywall: boolean
@@ -76,30 +72,10 @@ function getDeviceId(): string {
   return id
 }
 
-const LANGUAGES = [
-  { value: 'auto', label: 'auto' },
-  { value: 'English', label: 'English' },
-  { value: 'Spanish', label: 'Español' },
-  { value: 'French', label: 'Français' },
-  { value: 'German', label: 'Deutsch' },
-  { value: 'Italian', label: 'Italiano' },
-  { value: 'Portuguese', label: 'Português' },
-  { value: 'Hindi', label: 'हिन्दी' },
-  { value: 'Hinglish', label: 'Hinglish' },
-  { value: 'Japanese', label: '日本語' },
-  { value: 'Korean', label: '한국어' },
-  { value: 'Turkish', label: 'Türkçe' },
-  { value: 'Arabic', label: 'العربية' },
-  { value: 'Chinese', label: '中文' },
-]
-
 const initialPrefs: Prefs = {
-  token: '',
-  model: 'gemini-flash-latest',
   lang: 'auto',
   count: '3',
-  theme: 'light',
-  scenario: 'icebreaker',
+  theme: 'dark',
 }
 
 function loadPrefs(): Prefs {
@@ -110,15 +86,10 @@ function loadPrefs(): Prefs {
   } catch {
     stored = null
   }
-  const scenario =
-    stored?.scenario && SCENARIOS.some((s) => s.id === stored!.scenario)
-      ? (stored!.scenario as string)
-      : 'icebreaker'
   return {
     ...initialPrefs,
     ...(stored || {}),
-    scenario,
-    theme: stored?.theme === 'dark' || stored?.theme === 'system' ? stored!.theme : 'light',
+    theme: 'dark',
   }
 }
 
@@ -163,7 +134,7 @@ function errorMessage(err: unknown): string {
     return 'Invalid token. Get a free one at huggingface.co/settings/tokens.'
   }
   if (/404|doesn't exist|not found|not supported/i.test(m)) {
-    return "That model isn't supported. Try gemini-flash-latest."
+    return "That model isn't supported. Try again."
   }
   if (/429|rate limit/i.test(m)) {
     return 'Free tier rate limit hit — wait a few seconds and try again.'
@@ -173,7 +144,6 @@ function errorMessage(err: unknown): string {
 
 export default function RizzApp() {
   const [prefs, setPrefs] = useState<Prefs>(initialPrefs)
-  const [showSettings, setShowSettings] = useState(false)
   const [message, setMessage] = useState('')
   const [image, setImage] = useState<string | null>(null)
   const [imageBusy, setImageBusy] = useState(false)
@@ -339,11 +309,6 @@ export default function RizzApp() {
   const gen = useCallback(async () => {
     if (busy) return
     const msg = message.trim()
-    if (!msg && !image && prefs.scenario !== 'icebreaker') {
-      showToast('paste a message or attach a screenshot', true)
-      taRef.current?.focus()
-      return
-    }
 
     setBusy(true)
     setReplies(null)
@@ -358,9 +323,6 @@ export default function RizzApp() {
           image: image || undefined,
           language: prefs.lang,
           count: parseInt(prefs.count, 10) || 3,
-          token: prefs.token,
-          model: prefs.model,
-          scenario: prefs.scenario,
           deviceId: getDeviceId(),
         }),
       })
@@ -383,10 +345,10 @@ export default function RizzApp() {
           : a
       )
       const source = image ? 'screenshot' : 'text'
-      const scenarioTag =
-        SCENARIOS.find((s) => s.id === prefs.scenario)?.tag || ''
+      const detected = data.detected as { tag?: string; title?: string } | undefined
+      const detLabel = detected?.tag ? `${detected.tag} · ${detected.title}` : 'reply'
       setMeta(
-        `${prefs.count} versions · ${source} · ${scenarioTag} · ${data.model || 'default model'}`
+        `${prefs.count} versions · ${source} · auto · ${detLabel} · ${data.model || 'default model'}`
       )
     } catch (err) {
       showToast(errorMessage(err), true)
@@ -408,9 +370,6 @@ export default function RizzApp() {
             image: image || undefined,
             vibe,
             language: prefs.lang,
-            token: prefs.token,
-            model: prefs.model,
-            scenario: prefs.scenario,
             deviceId: getDeviceId(),
           }),
         })
@@ -530,25 +489,6 @@ export default function RizzApp() {
                 )}
               </svg>
             </button>
-            <button
-              onClick={() => setShowSettings((v) => !v)}
-              className="flex items-center gap-2 rounded-[14px] border-2 border-line2/70 bg-panel/80 px-3.5 py-2 font-body text-[11px] font-bold tracking-[0.03em] text-muted transition hover:border-rust hover:bg-rust/10 hover:text-paper"
-            >
-            <span className="hidden sm:inline">{showSettings ? 'close' : 'settings'}</span>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4"
-              aria-hidden
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
-            </button>
           </div>
         </header>
 
@@ -587,86 +527,6 @@ export default function RizzApp() {
           </div>
         </section>
 
-        {/* settings */}
-        {showSettings && (
-          <section className="mt-10 animate-fadeIn overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.1)]">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-5 py-3.5">
-              <span className="font-head text-[15px] font-bold tracking-[-0.02em] text-paper">
-                api access
-              </span>
-              <div className="flex items-center gap-1 rounded-xl border-2 border-line bg-ink2/70 p-1">
-                {(['light', 'dark', 'system'] as const).map((themeOption) => (
-                  <button
-                    key={themeOption}
-                    onClick={() => savePrefs({ ...prefs, theme: themeOption })}
-                    className={`rounded-lg px-2.5 py-1.5 text-[10px] font-semibold capitalize tracking-[0.04em] transition ${prefs.theme === themeOption ? 'bg-paper text-ink shadow-sm' : 'text-muted hover:text-paper'}`}
-                  >
-                    {themeOption}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="grid gap-7 p-5 sm:p-6 md:grid-cols-[1.4fr_1fr]">
-              <div>
-                <label className="block font-body text-sm font-bold tracking-[0.01em] text-muted">
-                  hf token{' '}
-                  <span className="ml-1 rounded-[3px] border border-rust/40 px-1.5 py-0.5 text-[9.5px] normal-case tracking-normal text-rust">
-                    free
-                  </span>
-                </label>
-                <div className="mt-2 flex gap-2">
-                  <input
-                    type="password"
-                    value={prefs.token}
-                    onChange={(e) => setPrefs((p) => ({ ...p, token: e.target.value }))}
-                    placeholder="hf_xxxxxxxx…"
-                    autoComplete="off"
-                    className="w-full flex-1 rounded-[14px] border-2 border-line bg-ink2/80 px-3.5 py-3 text-[13.5px] text-paper outline-none transition focus:border-rust focus:ring-2 focus:ring-rust/10 placeholder:text-faint"
-                  />
-                  <button
-                    onClick={() => savePrefs(prefs)}
-                    className="shrink-0 rounded-[14px] border-2 border-line2 bg-panel2 px-4 font-body text-[12px] font-bold text-paper transition hover:border-rust hover:text-rust"
-                  >
-                    save
-                  </button>
-                </div>
-                <p className="mt-2 text-[12px] leading-relaxed text-faint">
-                  Free tier, no card. Already configured via <span className="text-muted">.env</span> — only set
-                  this to override it. Otherwise leave blank.
-                </p>
-              </div>
-              <div>
-                <label className="block font-body text-sm font-bold tracking-[0.01em] text-muted">
-                  model
-                </label>
-                <input
-                  type="text"
-                  value={prefs.model}
-                  onChange={(e) => setPrefs((p) => ({ ...p, model: e.target.value }))}
-                  placeholder="gemini-flash-latest"
-                  spellCheck={false}
-                  className="mt-2 w-full rounded-[14px] border-2 border-line bg-ink2/80 px-3.5 py-3 font-body text-[12px] text-paper outline-none transition focus:border-rust focus:ring-2 focus:ring-rust/10 placeholder:text-faint"
-                />
-                <p className="mt-2 text-[12px] leading-relaxed text-faint">
-                  Powered by Gemini — no token needed. Default:
-                  gemini-flash-latest. (HF models still work here.)
-                </p>
-              </div>
-            </div>
-            <div className="border-t border-line px-5 py-3.5 text-[12px] text-faint">
-              Need a token?{' '}
-              <a
-                href="https://huggingface.co/settings/tokens"
-                target="_blank"
-                rel="noopener"
-                className="text-rust underline decoration-rust/40 underline-offset-2 hover:decoration-rust"
-              >
-                huggingface.co/settings/tokens
-              </a>
-            </div>
-          </section>
-        )}
-
         {/* editor */}
         <section
           onPaste={onEditorPaste}
@@ -699,46 +559,6 @@ export default function RizzApp() {
             }}
           />
           <div className="p-5 sm:p-6">
-            <div className="mb-4 grid gap-2 sm:grid-cols-3">
-              {SCENARIOS.map((s) => {
-                const active = prefs.scenario === s.id
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => savePrefs({ ...prefs, scenario: s.id })}
-                    className={`rounded-[16px] border-2 px-4 py-3 text-left transition ${
-                      active
-                        ? 'border-rust/80 bg-rust/10 text-rust'
-                        : 'border-line2 bg-ink2/40 text-muted hover:border-rust hover:text-rust'
-                    }`}
-                  >
-                    <span
-                      className={`block text-[10px] font-bold tracking-[0.1em] ${
-                        active ? 'text-rust/70' : ''
-                      }`}
-                    >
-                      {s.tag}
-                    </span>
-                    <span
-                      className={`mt-0.5 block font-head text-[13px] font-bold tracking-[-0.01em] ${
-                        active ? 'text-paper' : ''
-                      }`}
-                    >
-                      {s.title}
-                    </span>
-                    <span
-                      className={`mt-0.5 block text-[11px] leading-snug ${
-                        active ? 'text-paper/60' : 'text-faint'
-                      }`}
-                    >
-                      {s.description}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
             <div className="relative">
               <textarea
                 ref={taRef}
@@ -755,7 +575,11 @@ export default function RizzApp() {
                 }}
                 rows={3}
                 maxLength={1000}
-                placeholder={image ? 'optional — add a note or the exact message…' : prefs.scenario === 'icebreaker' ? 'optional — leave blank to open cold, or add a photo/story context…' : 'what they sent…'}
+                placeholder={
+                  image
+                    ? 'optional — add a note or the exact message…'
+                    : 'what they sent… (blank = open cold with a pickup line)'
+                }
                 spellCheck
                 className="min-h-[128px] w-full resize-y rounded-[18px] border-2 border-line bg-ink2/80 px-4 py-4 pr-12 text-[16px] leading-relaxed text-paper outline-none transition placeholder:text-faint focus:border-rust focus:ring-4 focus:ring-rust/10"
               />
@@ -815,23 +639,6 @@ export default function RizzApp() {
             )}
             <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-wrap items-end gap-3.5">
-                <label>
-                  <span className="mb-2 block font-body text-[11px] font-bold tracking-[0.04em] text-muted/80">
-                    reply in
-                  </span>
-                  <select
-                    value={prefs.lang}
-                    onChange={(e) => savePrefs({ ...prefs, lang: e.target.value })}
-                    className={selectBaseClass}
-                    style={selectStyle}
-                  >
-                    {LANGUAGES.map((l) => (
-                      <option key={l.value} value={l.value} className="bg-ink2 text-paper">
-                        {l.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
                 <label>
                   <span className="mb-2 block font-body text-[11px] font-bold tracking-[0.04em] text-muted/80">
                     versions
@@ -1022,7 +829,6 @@ export default function RizzApp() {
             rizzup 2026
           </span>
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span>free hf inference</span>
             <span>nothing stored</span>
           </span>
         </footer>

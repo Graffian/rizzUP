@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   VIBES,
+  ICEBREAKER_BLANK_NOTE,
   buildContextMessages,
   buildFixMessages,
   buildMessages,
   buildQualityFixMessages,
   buildStyleFixMessages,
+  detectScenario,
   flatReplyIssue,
   looksLikeHinglish,
   openingIssue,
@@ -23,7 +25,7 @@ import {
 } from '@/lib/auth'
 import {
   chat,
-  geminiApiKey,
+  // geminiApiKey,
   readEnv,
   resolveModel,
   transcribeImage,
@@ -43,12 +45,12 @@ export async function POST(req: NextRequest) {
   const model = resolveModel(body.model)
   const message = String(body.message || '').trim()
   const image = String(body.image || '').trim()
-  const scenario = String(body.scenario || '').trim()
   const language = String(body.language || 'auto')
   let count = parseInt(body.count, 10) || 3
   count = Math.min(Math.max(count, 1), 5)
 
-  if (!message && !image && scenario !== 'icebreaker') {
+  let detected = detectScenario(null, !!message)
+  if (!image && detected.id !== 'icebreaker' && !message) {
     return NextResponse.json(
       { error: 'Paste a message or attach a screenshot.' },
       { status: 400 }
@@ -60,7 +62,8 @@ export async function POST(req: NextRequest) {
       { status: 413 }
     )
   }
-  if (!token && !geminiApiKey()) {
+  if (!token) {
+    // if (!token && !geminiApiKey()) {
     return NextResponse.json(
       { error: 'No Hugging Face token. Add a free one at huggingface.co/settings/tokens and save it in Settings.' },
       { status: 401 }
@@ -84,6 +87,7 @@ export async function POST(req: NextRequest) {
   const vibes = VIBES.slice(0, count)
 
   let genMessages: Array<{ role: string; content: string }>
+  let scenario = detected.id
   let hinglishMode: boolean
   let englishMode: boolean
   let fixText: string
@@ -98,6 +102,8 @@ export async function POST(req: NextRequest) {
         { status: e?.status && e.status >= 400 && e.status <= 599 ? e.status : 500 }
       )
     }
+    detected = detectScenario(transcript, !!message)
+    scenario = detected.id
     genMessages = buildContextMessages(transcript, message, language, vibes, scenario)
     const themText = [message, transcriptThemLines(transcript)].filter(Boolean).join('\n')
     hinglishMode = language === 'Hinglish' || looksLikeHinglish(themText)
@@ -108,6 +114,9 @@ export async function POST(req: NextRequest) {
     fixText = [message, transcript].filter(Boolean).join('\n')
   } else {
     genMessages = buildMessages(message, language, vibes, scenario)
+    if (detected.blank) {
+      genMessages[1].content += `\n\n${ICEBREAKER_BLANK_NOTE}`
+    }
     hinglishMode = language === 'Hinglish' || looksLikeHinglish(message)
     englishMode =
       (language === 'auto' || language === 'English') &&
@@ -186,7 +195,11 @@ export async function POST(req: NextRequest) {
     if (paywallEnabled() && deviceId && !hasActiveAccess) {
       await claimTrial(deviceId, ip)
     }
-    return NextResponse.json({ model: usedModel, replies })
+    return NextResponse.json({
+      model: usedModel,
+      replies,
+      detected: { id: detected.id, tag: detected.tag, title: detected.title },
+    })
   } catch (e: any) {
     const status = e?.status && e.status >= 400 && e.status <= 599 ? e.status : 500
     return NextResponse.json(

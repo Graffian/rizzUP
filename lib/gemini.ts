@@ -1,3 +1,8 @@
+/*
+ * Gemini provider — DISABLED. All generation + vision now runs on Hugging Face only.
+ * Re-enable later by uncommenting this file and the Gemini branches in lib/hf.ts,
+ * and restoring geminiApiKey in app/api/reply/route.ts + app/api/swap/route.ts.
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export type ChatMessage = {
@@ -149,3 +154,4 @@ export async function geminiChat(
       : 'The Gemini model is busy loading. Try again in a few seconds.'
   throw new GeminiError(lastMsg, lastStatus || 503)
 }
+*/

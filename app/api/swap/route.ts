@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   SYSTEM_PROMPT,
+  ICEBREAKER_BLANK_NOTE,
   buildContextSwapUserPrompt,
   buildSwapUserPrompt,
+  detectScenario,
   flatReplyIssue,
   looksLikeHinglish,
   openingIssue,
@@ -17,7 +19,7 @@ import {
   missingDeviceResponse,
   paywallEnabled,
 } from '@/lib/auth'
-import { chat, geminiApiKey, readEnv, resolveModel, transcribeImage } from '@/lib/hf'
+import { chat, /* geminiApiKey, */ readEnv, resolveModel, transcribeImage } from '@/lib/hf'
 
 const MAX_IMAGE_CHARS = 3_000_000
 
@@ -33,24 +35,17 @@ export async function POST(req: NextRequest) {
   const model = resolveModel(body.model)
   const message = String(body.message || '').trim()
   const image = String(body.image || '').trim()
-  const scenario = String(body.scenario || '').trim()
   const vibe = String(body.vibe || 'Smooth & confident').trim()
   const language = String(body.language || 'auto')
-  const icebreaker = scenario === 'icebreaker'
 
-  if (!message && !image && scenario !== 'icebreaker') {
-    return NextResponse.json(
-      { error: 'Paste a message or attach a screenshot.' },
-      { status: 400 }
-    )
-  }
   if (image && image.length > MAX_IMAGE_CHARS) {
     return NextResponse.json(
       { error: 'Screenshot is too large. Try a smaller image.' },
       { status: 413 }
     )
   }
-  if (!token && !geminiApiKey()) {
+  if (!token) {
+    // if (!token && !geminiApiKey()) {
     return NextResponse.json(
       { error: 'No Hugging Face token configured.' },
       { status: 401 }
@@ -71,6 +66,7 @@ export async function POST(req: NextRequest) {
   let buildSwapPrompt: (extra?: string) => string
   let hinglishMode: boolean
   let englishMode: boolean
+  let icebreaker = false
 
   if (image) {
     let transcript: string
@@ -82,7 +78,9 @@ export async function POST(req: NextRequest) {
         { status: e?.status && e.status >= 400 && e.status <= 599 ? e.status : 500 }
       )
     }
-    const base = buildContextSwapUserPrompt(transcript, message, language, vibe, scenario)
+    const detected = detectScenario(transcript, !!message)
+    icebreaker = detected.id === 'icebreaker'
+    const base = buildContextSwapUserPrompt(transcript, message, language, vibe, detected.id)
     buildSwapPrompt = (extra = '') => (extra ? `${base}\n\n${extra}` : base)
     const themText = [message, transcriptThemLines(transcript)].filter(Boolean).join('\n')
     hinglishMode = language === 'Hinglish' || looksLikeHinglish(themText)
@@ -91,7 +89,10 @@ export async function POST(req: NextRequest) {
       !hinglishMode &&
       !/\p{Script=Devanagari}/u.test(themText)
   } else {
-    const base = buildSwapUserPrompt(message, language, vibe, scenario)
+    const detected = detectScenario(null, !!message)
+    icebreaker = detected.id === 'icebreaker'
+    let base = buildSwapUserPrompt(message, language, vibe, detected.id)
+    if (detected.blank) base += `\n\n${ICEBREAKER_BLANK_NOTE}`
     buildSwapPrompt = (extra = '') => (extra ? `${base}\n\n${extra}` : base)
     hinglishMode = language === 'Hinglish' || looksLikeHinglish(message)
     englishMode =
