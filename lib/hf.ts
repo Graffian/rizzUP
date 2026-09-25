@@ -190,7 +190,7 @@ export async function transcribeImage(token: string, image: string): Promise<str
   const key = geminiApiKey()
   if (key) {
     try {
-      const { text } = await geminiChat(
+      const { text, model } = await geminiChat(
         key,
         geminiVisionModel(),
         buildVisionTranscriptMessages(image),
@@ -198,6 +198,7 @@ export async function transcribeImage(token: string, image: string): Promise<str
         1200,
         0.1
       )
+      console.log(`[vision] interpreter: Gemini (${model})`)
       const t = String(text || '').trim()
       if (t && (t.includes('TRANSCRIPT') || /^PLATFORM\s*:/m.test(t))) return t
     } catch {
@@ -207,7 +208,7 @@ export async function transcribeImage(token: string, image: string): Promise<str
   let lastErr: HFError | null = null
   for (const visionModel of visionModelCandidates()) {
     try {
-      const { text } = await hfChat(
+      const { text, model } = await hfChat(
         token,
         visionModel,
         buildVisionTranscriptMessages(image),
@@ -215,6 +216,7 @@ export async function transcribeImage(token: string, image: string): Promise<str
         1200,
         0.1
       )
+      console.log(`[vision] interpreter: HF (${model})`)
       const t = String(text || '').trim()
       if (t && (t.includes('TRANSCRIPT') || /^PLATFORM\s*:/m.test(t))) return t
       lastErr = new HFError('Vision model returned no readable transcript.', 502)

@@ -3,6 +3,7 @@ import {
   SYSTEM_PROMPT,
   buildContextSwapUserPrompt,
   buildSwapUserPrompt,
+  flatReplyIssue,
   looksLikeHinglish,
   openingIssue,
   parseSwapReply,
@@ -131,6 +132,37 @@ export async function POST(req: NextRequest) {
           )
           const candidate = parseSwapReply(retry.text, icebreaker)
           if (candidate.reply && !openingIssue(candidate)) {
+            fixed = candidate
+          } else {
+            break
+          }
+        } catch {
+          break
+        }
+      }
+      result = fixed
+    }
+
+    if (!icebreaker && flatReplyIssue(result)) {
+      let fixed = result
+      for (let attempt = 0; attempt < 2 && flatReplyIssue(fixed); attempt++) {
+        try {
+          const retry = await chat(
+            token,
+            model,
+            [
+              { role: 'system', content: SYSTEM_PROMPT },
+              {
+                role: 'user',
+                content: buildSwapPrompt(
+                  'The reply came out flat — it reviews the situation from the outside instead of flirting, or it sidesteps her last message instead of answering it. Rewrite it: answer her directly, complete the joke she set up, land on her, signal interest. Short, spoken, one quick sentence, under ~15 words. No labeled verdict openings, no "plot twist" reversals, no "just checking if…" reboots, no self-deprecating meta.'
+                ),
+              },
+            ],
+            3
+          )
+          const candidate = parseSwapReply(retry.text, icebreaker)
+          if (candidate.reply && !flatReplyIssue(candidate)) {
             fixed = candidate
           } else {
             break

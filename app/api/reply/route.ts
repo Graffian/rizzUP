@@ -4,7 +4,9 @@ import {
   buildContextMessages,
   buildFixMessages,
   buildMessages,
+  buildQualityFixMessages,
   buildStyleFixMessages,
+  flatReplyIssue,
   looksLikeHinglish,
   openingIssue,
   parseReplies,
@@ -169,6 +171,10 @@ export async function POST(req: NextRequest) {
           (r) => !openingIssue(r)
         )
       }
+      replies = await fill(
+        (missing) => buildQualityFixMessages(fixText, missing, scenario),
+        (r) => !flatReplyIssue(r)
+      )
     }
 
     if (!replies.length) {
