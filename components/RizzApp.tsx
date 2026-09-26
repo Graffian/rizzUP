@@ -11,7 +11,6 @@ type Reply = { vibe: string; reply: string; yes?: string; no?: string }
 type Theme = 'light' | 'dark' | 'system'
 type Prefs = {
   lang: string
-  count: string
   theme: Theme
 }
 type Access = {
@@ -74,7 +73,6 @@ function getDeviceId(): string {
 
 const initialPrefs: Prefs = {
   lang: 'auto',
-  count: '3',
   theme: 'dark',
 }
 
@@ -322,7 +320,7 @@ export default function RizzApp() {
           message: msg,
           image: image || undefined,
           language: prefs.lang,
-          count: parseInt(prefs.count, 10) || 3,
+          count: 1,
           deviceId: getDeviceId(),
         }),
       })
@@ -348,7 +346,7 @@ export default function RizzApp() {
       const detected = data.detected as { tag?: string; title?: string } | undefined
       const detLabel = detected?.tag ? `${detected.tag} · ${detected.title}` : 'reply'
       setMeta(
-        `${prefs.count} versions · ${source} · auto · ${detLabel} · ${data.model || 'default model'}`
+        `${source} · auto · ${detLabel}`
       )
     } catch (err) {
       showToast(errorMessage(err), true)
@@ -420,17 +418,6 @@ export default function RizzApp() {
     [showToast]
   )
 
-  const num = useCallback((i: number) => String(i + 1).padStart(2, '0'), [])
-
-  const selectBaseClass =
-    'min-w-[112px] cursor-pointer appearance-none rounded-2xl border-2 border-line bg-ink2/80 px-3.5 py-2.5 pr-8 font-body text-[12px] font-semibold text-paper outline-none transition hover:border-line2 focus:border-rust focus:ring-4 focus:ring-rust/10'
-
-  const selectStyle = {
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23696056' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'right 9px center',
-  } as const
-
   return (
     <div className={`theme-${prefs.theme} relative isolate min-h-screen overflow-hidden text-paper`}>
       <div className="intro-screen pointer-events-none fixed inset-0 z-[100] flex items-center justify-center bg-ink">
@@ -501,11 +488,11 @@ export default function RizzApp() {
               <em className="font-serifit font-normal italic text-rust">mean it.</em>
             </h1>
             <p className="mt-6 max-w-xl text-[16px] leading-[1.65] text-muted">
-              Paste the message. Get a handful of replies that sound like you on a
-              good day — one to tease, one to charm, one to keep short.
+              Paste the message. Get the one line that sounds like you on a good
+              day — replace it till it feels right.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] font-semibold tracking-[0.1em] text-muted/80">
-              <span>13 languages</span>
+              <span>matches her language</span>
               <span>enter to generate</span>
               <span>nothing stored</span>
             </div>
@@ -638,26 +625,6 @@ export default function RizzApp() {
               </div>
             )}
             <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex flex-wrap items-end gap-3.5">
-                <label>
-                  <span className="mb-2 block font-body text-[11px] font-bold tracking-[0.04em] text-muted/80">
-                    versions
-                  </span>
-                  <select
-                    value={prefs.count}
-                    onChange={(e) => savePrefs({ ...prefs, count: e.target.value })}
-                    className={selectBaseClass}
-                    style={selectStyle}
-                  >
-                    <option value="3" className="bg-ink2 text-paper">
-                      3
-                    </option>
-                    <option value="5" className="bg-ink2 text-paper">
-                      5
-                    </option>
-                  </select>
-                </label>
-              </div>
               <button
                 onClick={gen}
                 disabled={busy}
@@ -714,10 +681,7 @@ export default function RizzApp() {
 
         {/* results */}
         <section className="animate-entrance animate-delay-5 mt-16 sm:mt-20">
-          <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2 border-b border-line pb-3">
-            <span className="font-head text-[15px] font-bold tracking-[-0.02em] text-paper">
-              your options
-            </span>
+          <div className="mb-5 flex flex-wrap items-baseline justify-end gap-2 border-b border-line pb-3">
             {meta && (
               <span className="text-[12px] font-semibold tracking-[0.02em] text-faint">
                 {meta}
@@ -727,7 +691,7 @@ export default function RizzApp() {
 
           {busy ? (
             <div className="flex flex-col gap-3">
-              {[0, 1, 2].map((i) => (
+              {[0].map((i) => (
                 <div key={i} className="shimmer h-[148px] border border-line" />
               ))}
             </div>
@@ -739,11 +703,6 @@ export default function RizzApp() {
                   className="animate-fadeUp overflow-hidden rounded-[22px] border-2 border-line2/60 bg-panel/90 shadow-[0_2px_0_rgb(var(--color-paper)_/_0.1)] transition hover:border-rust"
                   style={{ animationDelay: i * 60 + 'ms' }}
                 >
-                  <div className="flex items-center justify-between border-b-2 border-line px-5 py-3.5">
-                    <span className="font-body text-[11px] font-bold tracking-[0.06em] text-paper/70">
-                      {r.vibe}
-                    </span>
-                  </div>
                   <div className="px-5 py-5">
                     <p className="whitespace-pre-wrap break-words text-[16px] leading-relaxed text-paper/90">
                       {r.reply}
@@ -830,6 +789,29 @@ export default function RizzApp() {
           </span>
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span>nothing stored</span>
+            <a
+              href="https://www.instagram.com/rizzzzzzzzup/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 transition hover:text-paper"
+              aria-label="rizzup on instagram"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+              </svg>
+              rizzzzzzzzup
+            </a>
           </span>
         </footer>
       </main>

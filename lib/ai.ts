@@ -215,6 +215,26 @@ The "reply" is a cheeky, spontaneous YES/NO question that feels like something y
 {"vibe":"<the vibe>","reply":"<the reply text>"}`
 }
 
+function flirtContinuation(count: number): string {
+  const tail =
+    count === 1
+      ? 'One reply only — no variety tax. Write the single strongest flirt: the one line, specific to this conversation, that clearly lands on her.'
+      : `The replies are ${count} different ways of being into her — a compliment, a tease, a playful volley — never two replies making the same move (two versions of 'you'd be too easy to find' is a fail).`
+  return `
+CONTINUE, DON'T GAME THE THREAD. The reply is the very next thing you'd actually text her — it must come across as interest in HER, never as a move in the game. The conversation's gimmick (the game, the joke, the tease) is only the delivery vehicle; the payload of every line is always the flirt.
+
+Calibration — inspiration, not a template. In a hide-and-seek game, these only continue the game with no payload: 'I'd still find you first.' / 'You'd make hide-and-seek way too easy.' The move that works: flip the thread so it becomes a compliment aimed at HER — 'someone like you is basically impossible to hide from.' Take the MOVE, never the line: build each conversation its own version of it, then rehearse every line aloud — if it doesn't sound like you're into her, re-aim it.
+
+${tail}`
+}
+
+function requestLine(count: number): string {
+  if (count === 1) {
+    return `Give me exactly ONE reply option — the single best line for this vibe, the line you'd actually send. Reply as ONLY a JSON array holding that one item — no markdown code fences, no extra words before or after. The reply must be short, spoken, natural — one quick sentence (two only if the joke needs it), under ~15 words, no dramatic setups and no trailing "or am I...?" rhetorical tags.`
+  }
+  return `Give me ${count} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every reply must be short, spoken, natural — one quick sentence (two only if the joke needs it), under ~15 words, no dramatic setups and no trailing "or am I...?" rhetorical tags.`
+}
+
 export interface DetectedScenario {
   id: string
   tag: string
@@ -265,20 +285,21 @@ export function buildUserPrompt(
   const list = vibes.map((v, i) => `${i + 1}. ${v}`).join('\n')
   const hasMsg = !!message.trim()
   const languageBars = specific
-    ? `\n\nCRITICAL: Every one of the ${vibes.length} replies MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if a reply comes out in the wrong language, rewrite the whole reply before including it.`
+    ? vibes.length === 1
+      ? `\n\nCRITICAL: The reply MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if the reply comes out in the wrong language, rewrite it before including it.`
+      : `\n\nCRITICAL: Every one of the ${vibes.length} replies MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if a reply comes out in the wrong language, rewrite the whole reply before including it.`
     : ''
   const englishNote =
     hasMsg && !specific && !looksLikeHinglish(message) && !/\p{Script=Devanagari}/u.test(message)
-      ? '\n\nHer message is in plain English, so write EVERY reply in plain, natural English.'
+      ? vibes.length === 1
+        ? '\n\nHer message is in plain English, so write the reply in plain, natural English.'
+        : '\n\nHer message is in plain English, so write EVERY reply in plain, natural English.'
       : ''
   const shortNote =
     hasMsg && message.trim().split(/\s+/).length <= 2 && message.trim().length <= 15
       ? '\n\nThis message is very short. Reply short, casual and lightly flirty, like two people already comfortable with each other — never formal or surprised.'
       : ''
-  const softMeetup =
-    scenario === 'icebreaker'
-      ? ''
-      : ' If the conversation is warm and going well, you can naturally steer toward meeting up — low-pressure, specific, with an easy out. Never force it.'
+  const flirt = scenario === 'icebreaker' ? '' : flirtContinuation(vibes.length)
   const head = hasMsg
     ? `The message:
 """
@@ -291,13 +312,14 @@ ${message}
 ${message}
 """`
   return `${head}
-${scenarioBlock(scenario)}
+${scenario === 'icebreaker' ? scenarioBlock(scenario) : ''}
+${flirt}
 
 Reply language: ${langLine}${languageBars}${englishNote}${shortNote}
 
 ${personNote('text')}
 
-Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every reply must be short, spoken, natural — one quick sentence (two only if the joke needs it), under ~15 words, no dramatic setups and no trailing "or am I...?" rhetorical tags. Every reply must visibly flirt — signal interest in HER, land on her, compliment-adjacent, forward. Banned: cold observations, verdicts or reviews of the situation that could be sent to anyone ('Diagnosis: too much blue dress in my feed'). If her last line is a question, each reply answers it and lands the payoff — verdict frames ('Diagnosis:', 'Plot twist:', 'Just checking if…') are banned. Type the way you'd actually reply off the top of your head.${softMeetup} ${scenarioJsonShape(scenario)}
+${requestLine(vibes.length)} Every reply must visibly flirt — signal interest in HER, land on her, compliment-adjacent, forward. Banned: cold observations, verdicts or reviews of the situation that could be sent to anyone ('Diagnosis: too much blue dress in my feed'). If her last line is a question, each reply answers it and lands the payoff — verdict frames ('Diagnosis:', 'Plot twist:', 'Just checking if…') are banned. Type the way you'd actually reply off the top of your head. ${scenarioJsonShape(scenario)}
 
 Vibes in order:
 ${list}
@@ -420,7 +442,7 @@ export function buildQualityFixMessages(
 ${message}
 """
 
-Some of the reply options came out flat — they review the situation from the outside (a line that opens with a label and a colon, like a verdict), or they sidestep her last message instead of answering it, or they bury the compliment in self-deprecation. None of those flirt. Rewrite ONLY the vibes listed below: each reply must answer her last message directly (if she asked a question, complete the joke that set it up), land on her, and clearly signal interest — short, spoken, one quick sentence, under ~15 words. No labeled verdict openings, no "plot twist" reversals, no "just checking if…" reboots, no self-deprecating meta. If a reply needs more than one sentence to flirt, it is not flirty enough.
+Some of the reply options came out flat — they review the situation from the outside (a line that opens with a label and a colon, like a verdict), or they sidestep her last message instead of answering it, or they bury the compliment in self-deprecation. None of those flirt. Rewrite ONLY the vibes listed below: each reply must answer her last message directly (if she asked a question, complete the joke that set it up), land on her, and clearly signal interest — short, spoken, one quick sentence, under ~15 words. No labeled verdict openings, no "plot twist" reversals, no "just checking if…" reboots, no self-deprecating meta. If a reply needs more than one sentence to flirt, it is not flirty enough.${scenario && scenario !== 'icebreaker' ? '\n\nEvery rewritten reply MUST also reference something specific from the conversation above — a concrete word, detail or callback — AND read as interest in HER: the callback is delivery, the flirt is the payload. Continue the game only as the vehicle (take the move behind \'someone like you is basically impossible to hide from\' and build this conversation\'s own version). A line that just keeps the game going without landing on her, or could be sent to anyone, is a fail.' : ''}
 
 ${scenarioJsonShape(scenario)}
 
@@ -432,6 +454,100 @@ Here is the JSON array:`,
   ] as Array<{ role: string; content: string }>
 }
 
+const ANCHOR_STOP = new Set(
+  (
+    'the a an and or but if then else for to in on with at by from as is are was were be been being it its this that these those you your yours i me my mine we us our he she they him her them his hers theirs their there here what which who whom when where why how not no so just very really about around over under would could should shall may might must will can do does did have has had having get gets got getting go goes went going wanna want wanted wants come comes came coming know knows knew knowing think thinks thought thinking look looks looked looking see saw seen seeing make makes made making say says said saying tell tells told ask asks asked put puts feel feels felt let lets keep keeps kept take takes took love loves loved like likes liked help helps helped ok okay hmm yeah yes hey aww lol never always often sometimes every each both few much some any all than then now still also though through against between into during before after above below down up out off once again day days thing things stuff way ways time times right fine good great couldd couldnt dont doesnt didnt cant wasnt isnt aint ve re ll d clock facebook instagram whatsapp telegram snapchat imessage story stories dm dms chat message reply message replies'
+  )
+    .split(/\s+/)
+)
+
+export function extractAnchors(input: string | null | undefined, limit = 8): string[] {
+  let t = String(input || '')
+  const transHead = t.search(/^transcript\s*:/im)
+  if (transHead >= 0) t = t.slice(transHead)
+  t = t
+    .replace(/^transcript\s*:\s*[^\n]*/im, ' ')
+    .replace(/^(you|them)\s*:/gim, ' ')
+  const words = t
+    .toLowerCase()
+    .replace(/[’']/g, ' ')
+    .replace(/[^a-z\s]/g, ' ')
+    .split(/\s+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length >= 4 && !ANCHOR_STOP.has(w))
+  const scores = new Map<string, number>()
+  for (const w of words) scores.set(w, (scores.get(w) || 0) + 1)
+  const ranked = [...scores.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([w]) => w)
+  return ranked.slice(0, limit)
+}
+
+export function hasAnyAnchor(text: string | null | undefined, anchors: string[]): boolean {
+  if (!anchors.length) return false
+  const t = String(text || '').toLowerCase()
+  return anchors.some((a) => t.includes(a))
+}
+
+export function buildCallbackFixMessages(
+  message: string,
+  anchors: string[],
+  vibes: string[],
+  scenario?: string
+) {
+  const anchorList = anchors.slice(0, 6).join(', ')
+  const list = vibes.map((v, i) => `${i + 1}. ${v}`).join('\n')
+  return [
+    { role: 'system', content: SYSTEM_PROMPT },
+    {
+      role: 'user',
+      content: `The message / conversation:
+"""
+${message}
+"""
+
+None of the reply options reference this specific conversation — they're generic lines that could be sent to anyone. Rewrite ONLY the vibes listed below. Each reply MUST weave in at least one distinctive word from this conversation (e.g. ${anchorList}) so it can only make sense in THIS exchange, and it must read as interest in HER: the anchor is the delivery vehicle, the compliment toward her is the payload — take the move behind 'someone like you is basically impossible to hide from' and build this conversation's own version. Merely continuing the game while referencing a word (her 'aww' → 'don't aww me') is still a fail. Short, spoken, one quick sentence, under ~15 words, visibly flirty, no verdict frames ('Diagnosis:', 'Plot twist:', 'Just checking if…'), no newspaper-review tone.
+
+${scenarioJsonShape(scenario)}
+
+Vibes to rewrite:
+${list}
+
+Here is the JSON array:`,
+    },
+  ] as Array<{ role: string; content: string }>
+}
+
+export function scoreReply(
+  reply: string,
+  anchors: string[],
+  scenario?: string
+): number {
+  const t = String(reply || '').trim()
+  if (!t) return -1
+  let s = 0
+  if (!flatReplyIssue({ reply: t })) s += 2
+  if (scenario !== 'icebreaker' && hasAnyAnchor(t, anchors)) s += 2
+  if (t.split(/\s+/).length <= 15) s += 1
+  if (/\byou\b|\byour\b|\byours\b/i.test(t)) s += 1
+  return s
+}
+
+export function pickBetter<
+  T extends { reply: string }
+>(
+  a: T | null | undefined,
+  b: T | null | undefined,
+  anchors: string[],
+  scenario?: string
+): T {
+  if (!a) return b as T
+  if (!b) return a
+  return scoreReply(b.reply, anchors, scenario) > scoreReply(a.reply, anchors, scenario)
+    ? b
+    : a
+}
+
 export function buildMessages(message: string, language: string, vibes: string[], scenario?: string) {
   return [
     { role: 'system', content: SYSTEM_PROMPT },
@@ -441,11 +557,11 @@ export function buildMessages(message: string, language: string, vibes: string[]
 
 const personNote = (source: 'text' | 'image' | 'context') =>
   source === 'context'
-    ? `READ THE SITUATION FIRST: use WHAT'S HAPPENING and the TRANSCRIPT to understand the platform, the back-and-forth and the tease — reply as someone who is fully in on the joke. If they are teasing you, tease back and land it; never take a joke literally. Use the recorded details (like a selfie or story description) to make the reply specific and real.
+    ? `READ THE SITUATION FIRST: use WHAT'S HAPPENING and the TRANSCRIPT to understand the platform, the back-and-forth and the tease — reply as someone who is fully in on the joke, and build the reply PURELY from the TRANSCRIPT dialogue. The story/photo the screenshot shows is never a reference source: never comment on what is in it, what she looks like, or where she is. If they are teasing you, tease back and land it; never take a joke literally.
 PERSON ON THE OTHER END: write to the person described in THEM with the right gender and energy — if THEM says a man, that overrides any "she/her" assumed in the system prompt; if THEM says UNKNOWN, stop worrying about gender and just write a great, natural message. Never mention gender or the detection in the reply — landing the comeback is what matters.`
     : source === 'image'
-      ? `READ THE SITUATION FIRST: work out what's really happening between these two people — the platform (DM, story reply, etc.), the back-and-forth, the tease — and reply as someone who is fully in on the joke. If they are teasing you, tease back and land it; never take a joke literally and never get defensive. Use what is visible in the screenshot (like a selfie or the story they posted) to make the reply specific and real.
-PERSON ON THE OTHER END: if the screenshot makes it clear (a selfie, their name, pronouns), write to them as the right gender — if they are a man, that overrides any "she/her" assumed in the system prompt. If it is NOT obvious, stop worrying about gender: natural flirting is almost always gender-neutral anyway, so just write a great, natural message to this person. Never mention gender or the detection in the reply — landing the comeback is what matters.`
+      ? `READ THE SITUATION FIRST: work out what's really happening between these two people — the platform (DM, story reply, etc.), the back-and-forth, the tease — and reply as someone who is fully in on the joke. The story/photo in the screenshot is never a reference source: never comment on what is in it, what she looks like, or where she is — the reply must come PURELY from the conversation itself. If they are teasing you, tease back and land it; never take a joke literally and never get defensive.
+PERSON ON THE OTHER END: if the screenshot's chat makes it clear (their name, pronouns), write to them as the right gender — if they are a man, that overrides any "she/her" assumed in the system prompt. If it is NOT obvious, stop worrying about gender: natural flirting is almost always gender-neutral anyway, so just write a great, natural message to this person. Never mention gender or the detection in the reply — landing the comeback is what matters.`
       : `READ THE SITUATION FIRST: parse what's actually going on in the exchange — the tease, the mood, the subtext — and reply as someone who is in on it. If they are teasing you, tease back and land it; never take a joke literally. If their gender is obvious from the message (name, pronouns), write to them accordingly — a man overrides any "she/her" assumed in the system prompt. If not, just write a natural, gender-neutral message and don't overthink it. Never mention gender in the reply itself.`
 
 export function buildVisionTranscriptMessages(image: string) {
@@ -466,8 +582,8 @@ export function buildVisionTranscriptMessages(image: string) {
 Output ONLY this structure, nothing else:
 
 PLATFORM: one line — e.g. Instagram DM, Instagram story reply, WhatsApp, iMessage, Snapchat, Telegram, or "unknown"
-WHAT'S HAPPENING: 2-3 sentences — the situation, the mood, who is flirting with whom, and any context visible in the image (including what is in a selfie/story photo).
-THEM: what you can tell about the person who will be replied to — visible name, pronouns, appearance in a selfie, and their apparent gender ("male", "female", or "UNKNOWN"). Never invent what you cannot see.
+WHAT'S HAPPENING: 2-3 sentences — the situation and mood of the EXCHANGE: the back-and-forth, who is flirting with whom, the tone. Never describe the visual contents of a story/photo (no scenery, no clothing, no location, no selfie appearance) — if a story or photo is shown, you may only note that one exists, never what is in it.
+THEM: what you can tell about the person who will be replied to from the CHAT and interface only — visible name and their apparent gender ("male", "female", or "UNKNOWN"). Never describe their appearance, a selfie, or anything shown in a story/photo. Never invent what you cannot see.
 TRANSCRIPT (oldest to newest, one message per line):
 YOU: <exact words>
 THEM: <exact words>
@@ -515,12 +631,11 @@ export function buildContextUserPrompt(
     scenario === 'icebreaker'
       ? 'Rules: sound like a real, charming person sending a first message. The opening line IS the pickup line — honest, specific and funny, never gross or try-hard, no generic compliments, no emoji spam.'
       : 'Rules: sound like a real person texting, never cringe or try-hard, no pickup lines, no generic compliments, no emoji spam, and reference something specific so it clearly fits the conversation.'
-  const softMeetup =
-    scenario === 'icebreaker'
-      ? ''
-      : ' If the conversation is warm and going well, you can naturally steer toward meeting up — low-pressure, specific, with an easy out. Never force it.'
+  const flirt = scenario === 'icebreaker' ? '' : flirtContinuation(vibes.length)
   const languageBars = specific
-    ? `\n\nCRITICAL: Every one of the ${vibes.length} replies MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if a reply comes out in the wrong language, rewrite the whole reply before including it.`
+    ? vibes.length === 1
+      ? `\n\nCRITICAL: The reply MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if the reply comes out in the wrong language, rewrite it before including it.`
+      : `\n\nCRITICAL: Every one of the ${vibes.length} replies MUST be written entirely in ${langLine}. No reply may be written fully in English or any other language — if a reply comes out in the wrong language, rewrite the whole reply before including it.`
     : ''
   return `A screenshot of a real conversation was read by a vision model. Here is exactly what it shows:
 """
@@ -529,7 +644,8 @@ ${transcript}
 ${noteLine}
 
 ${taskLine}
-${scenarioBlock(scenario)}
+${scenario === 'icebreaker' ? scenarioBlock(scenario) : ''}
+${flirt}
 
 ${rulesLine}
 
@@ -537,7 +653,7 @@ ${personNote('context')}
 
 Reply language: ${langLine}${languageBars}
 
-Give me ${vibes.length} different reply options, one for each vibe in the order listed, as ONLY a JSON array — no markdown code fences, no extra words before or after. Every reply must be short, spoken, natural — one quick sentence (two only if the joke needs it), under ~15 words, no dramatic setups and no trailing "or am I...?" rhetorical tags. Every reply must visibly flirt — signal interest in HER, land on her, compliment-adjacent, forward. Banned: cold observations, verdicts or reviews of the situation that could be sent to anyone ('Diagnosis: too much blue dress in my feed'). If her last line is a question, each reply answers it and lands the payoff — verdict frames ('Diagnosis:', 'Plot twist:', 'Just checking if…') are banned. Type the way you'd actually reply off the top of your head.${softMeetup} ${scenarioJsonShape(scenario)}
+${requestLine(vibes.length)} Every reply must visibly flirt — signal interest in HER, land on her, compliment-adjacent, forward. Banned: cold observations, verdicts or reviews of the situation that could be sent to anyone ('Diagnosis: too much blue dress in my feed'). If her last line is a question, each reply answers it and lands the payoff — verdict frames ('Diagnosis:', 'Plot twist:', 'Just checking if…') are banned. Type the way you'd actually reply off the top of your head. ${scenarioJsonShape(scenario)}
 
 Vibes in order:
 ${list}
@@ -585,7 +701,7 @@ export function buildContextSwapUserPrompt(
     scenario === 'icebreaker'
       ? `Open with a cheeky, spontaneous YES/NO question that feels like a real spoken line — tied to something specific you can see about her or the moment (her profile, story, photo, name, or that you're opening cold), so it can't sound copy-pasted. The question MUST NOT contain the word 'or' — one clean question, no second option. The register to aim for is a self-aware micro-tease ('Do you always save your best lines for strangers?' hits it; 'Is your dad a thief?' misses it — that's a rehearsed pickup line). The "yes" line keeps the exchange going the way a confident person naturally would — playful and self-aware, never a rehearsed punchline reveal; the "no" line pivots the same theme with a foot in the door, never grovelling. Read the line aloud before keeping it: if it sounds like a pickup line from a list — puns, compliment-disguised-as-joke, silver-tongued wordplay ('Did it hurt when you fell from heaven?', 'Is that your natural smile?') — trash it and write a fresh, authentic line. NO flat praise like 'Nice work', nothing creepy or over the line, and the tease must ALWAYS be an inverted compliment — she ends up smiling, never mocked or slighted (never 'Did you steal that smile from a toothpaste commercial?', and never nonsense that wouldn't land in a real conversation). RULE: if you wouldn't send that exact text message to a crush you just met, rewrite it. Return ONLY this JSON object — no markdown, no extra words:
 {"reply":"<the first DM — one clean simple YES/NO question, no 'or'>","yes":"<follow-up if she says yes>","no":"<follow-up if she says no>"}`
-      : `Write exactly one reply with that vibe. Reply with ONLY the reply text — no quotes, no labels, no explanation. Sound like a real person, never cringe, no pickup lines, no generic compliments, and reference something specific so it fits the conversation. Keep it SHORT and casual — one quick sentence (or two only if the joke needs it), under ~15 words. No long setups, no dramatic framing, no trailing "or am I...?" rhetorical tags. It must visibly flirt — signal interest in HER, land on her, forward — never a cold observation or verdict about the situation ('Diagnosis: too much blue dress in my feed' is banned). If her last line is a question, answer it and land the payoff — no 'Diagnosis:', 'Plot twist:', or 'Just checking if…' reboots. Type the way you'd actually reply, off the top of your head.`
+      : `Write exactly one reply with that vibe. Reply with ONLY the reply text — no quotes, no labels, no explanation. Sound like a real person, never cringe, no pickup lines, no generic compliments, and reference something specific so it fits the conversation. Continue the conversation naturally — the game/joke/tease is only the delivery vehicle; the payload must clearly read as interest in HER, so flip the thread into a compliment aimed at her (take the move behind 'someone like you is basically impossible to hide from' and build this conversation's own version — never copy that line). A line that just keeps the game going, or could be sent to anyone, is a fail. Keep it SHORT and casual — one quick sentence (or two only if the joke needs it), under ~15 words. No long setups, no dramatic framing, no trailing "or am I...?" rhetorical tags. It must visibly flirt — signal interest in HER, land on her, forward — never a cold observation or verdict about the situation ('Diagnosis: too much blue dress in my feed' is banned). If her last line is a question, answer it and land the payoff — no 'Diagnosis:', 'Plot twist:', or 'Just checking if…' reboots. Type the way you'd actually reply, off the top of your head.`
   return `A screenshot of a real conversation was read by a vision model. Here is exactly what it shows:
 """
 ${transcript}
@@ -593,7 +709,7 @@ ${transcript}
 ${noteLine}
 
 ${taskLine}
-${scenarioBlock(scenario)}
+${scenario === 'icebreaker' ? scenarioBlock(scenario) : ''}
 
 ${personNote('context')}
 
@@ -615,7 +731,7 @@ export function buildSwapUserPrompt(
     scenario === 'icebreaker'
       ? `Open with a cheeky, spontaneous YES/NO question that feels like a real spoken line — tied to something specific about her or the moment (her profile, story, photo, name, or that you're opening cold), so it can't sound copy-pasted. The question MUST NOT contain the word 'or' — one clean question, no second option. The register to aim for is a self-aware micro-tease ('Do you always save your best lines for strangers?' hits it; 'Is your dad a thief?' misses it — that's a rehearsed pickup line). The "yes" line keeps the exchange going the way a confident person naturally would — playful and self-aware, never a rehearsed punchline reveal; the "no" line pivots the same theme with a foot in the door, never grovelling. Read the line aloud before keeping it: if it sounds like a pickup line from a list — puns, compliment-disguised-as-joke, silver-tongued wordplay ('Did it hurt when you fell from heaven?', 'Is that your natural smile?') — trash it and write a fresh, authentic line. NO flat praise like 'Nice work', nothing creepy or over the line, and the tease must ALWAYS be an inverted compliment — she ends up smiling, never mocked or slighted (never 'Did you steal that smile from a toothpaste commercial?', and never nonsense that wouldn't land in a real conversation). RULE: if you wouldn't send that exact text message to a crush you just met, rewrite it. Return ONLY this JSON object — no markdown, no extra words:
 {"reply":"<the first DM — one clean simple YES/NO question, no 'or'>","yes":"<follow-up if she says yes>","no":"<follow-up if she says no>"}`
-      : `Write exactly one reply with that vibe. Reply with ONLY the reply text — no quotes, no labels, no explanation. Sound like a real person, never cringe, no pickup lines, no generic compliments, and reference something specific so it fits the message. Keep it SHORT and casual — one quick sentence (or two only if the joke needs it), under ~15 words. No long setups, no dramatic framing, no trailing "or am I...?" rhetorical tags. It must visibly flirt — signal interest in HER, land on her, forward — never a cold observation or verdict about the situation ('Diagnosis: too much blue dress in my feed' is banned). If her last line is a question, answer it and land the payoff — no 'Diagnosis:', 'Plot twist:', or 'Just checking if…' reboots. Type the way you'd actually reply, off the top of your head.`
+      : `Write exactly one reply with that vibe. Reply with ONLY the reply text — no quotes, no labels, no explanation. Sound like a real person, never cringe, no pickup lines, no generic compliments, and reference something specific so it fits the message. Continue the conversation naturally — the game/joke/tease is only the delivery vehicle; the payload must clearly read as interest in HER, so flip the thread into a compliment aimed at her (take the move behind 'someone like you is basically impossible to hide from' and build this conversation's own version — never copy that line). A line that just keeps the game going, or could be sent to anyone, is a fail. Keep it SHORT and casual — one quick sentence (or two only if the joke needs it), under ~15 words. No long setups, no dramatic framing, no trailing "or am I...?" rhetorical tags. It must visibly flirt — signal interest in HER, land on her, forward — never a cold observation or verdict about the situation ('Diagnosis: too much blue dress in my feed' is banned). If her last line is a question, answer it and land the payoff — no 'Diagnosis:', 'Plot twist:', or 'Just checking if…' reboots. Type the way you'd actually reply, off the top of your head.`
   const hasMsg = !!message.trim()
   const head = hasMsg
     ? `The message:
@@ -629,7 +745,7 @@ ${message}
 ${message}
 """`
   return `${head}
-${scenarioBlock(scenario)}
+${scenario === 'icebreaker' ? scenarioBlock(scenario) : ''}
 
 Reply language: ${langLine}
 Vibe you must use: ${vibe}

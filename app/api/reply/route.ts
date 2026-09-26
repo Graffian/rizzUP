@@ -2,16 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   VIBES,
   ICEBREAKER_BLANK_NOTE,
+  buildCallbackFixMessages,
   buildContextMessages,
   buildFixMessages,
   buildMessages,
   buildQualityFixMessages,
   buildStyleFixMessages,
   detectScenario,
+  extractAnchors,
   flatReplyIssue,
+  hasAnyAnchor,
   looksLikeHinglish,
   openingIssue,
   parseReplies,
+  pickBetter,
   transcriptThemLines,
 } from '@/lib/ai'
 import {
@@ -128,6 +132,17 @@ export async function POST(req: NextRequest) {
   try {
     const { text, model: usedModel } = await chat(token, model, genMessages)
     let replies = parseReplies(text, vibes)
+    if (vibes.length === 1 && replies.length === 1) {
+      try {
+        const second = await chat(token, model, genMessages)
+        const secondReplies = parseReplies(second.text, vibes)
+        if (secondReplies.length === 1) {
+          replies = [pickBetter(replies[0], secondReplies[0], extractAnchors(fixText), scenario)]
+        }
+      } catch {
+        // keep the first draw
+      }
+    }
 
     const fill = async (
       makeFix: (missing: string[]) => Array<{ role: string; content: string }>,
@@ -184,6 +199,33 @@ export async function POST(req: NextRequest) {
         (missing) => buildQualityFixMessages(fixText, missing, scenario),
         (r) => !flatReplyIssue(r)
       )
+      if (scenario !== 'icebreaker') {
+        const anchors = extractAnchors(fixText)
+        if (anchors.length > 0 && !replies.some((r) => hasAnyAnchor(r.reply, anchors))) {
+          const original = replies
+          try {
+            const fixed = await chat(
+              token,
+              model,
+              buildCallbackFixMessages(fixText, anchors, vibes, scenario)
+            )
+            const cand = parseReplies(fixed.text, vibes).filter(
+              (r) => !flatReplyIssue(r) && hasAnyAnchor(r.reply, anchors)
+            )
+            const merged = vibes
+              .map((v) => {
+                const better = cand.find((r) => r.vibe === v && hasAnyAnchor(r.reply, anchors))
+                return better || original.find((r) => r.vibe === v)
+              })
+              .filter(
+                (r): r is { vibe: string; reply: string; yes?: string; no?: string } => !!r
+              )
+            if (merged.length) replies = merged
+          } catch {
+            // keep the original batch — never make things worse
+          }
+        }
+      }
     }
 
     if (!replies.length) {

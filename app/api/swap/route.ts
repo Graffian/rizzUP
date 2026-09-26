@@ -5,10 +5,12 @@ import {
   buildContextSwapUserPrompt,
   buildSwapUserPrompt,
   detectScenario,
+  extractAnchors,
   flatReplyIssue,
   looksLikeHinglish,
   openingIssue,
   parseSwapReply,
+  pickBetter,
   transcriptThemLines,
 } from '@/lib/ai'
 import {
@@ -67,6 +69,7 @@ export async function POST(req: NextRequest) {
   let hinglishMode: boolean
   let englishMode: boolean
   let icebreaker = false
+  let fixSource = message
 
   if (image) {
     let transcript: string
@@ -83,6 +86,7 @@ export async function POST(req: NextRequest) {
     const base = buildContextSwapUserPrompt(transcript, message, language, vibe, detected.id)
     buildSwapPrompt = (extra = '') => (extra ? `${base}\n\n${extra}` : base)
     const themText = [message, transcriptThemLines(transcript)].filter(Boolean).join('\n')
+    fixSource = themText
     hinglishMode = language === 'Hinglish' || looksLikeHinglish(themText)
     englishMode =
       (language === 'auto' || language === 'English') &&
@@ -111,6 +115,20 @@ export async function POST(req: NextRequest) {
     let result = parseSwapReply(text, icebreaker)
     if (!result.reply) {
       return NextResponse.json({ error: 'Model returned no text.' }, { status: 502 })
+    }
+    try {
+      const second = await chat(token, model, messages, 3)
+      const candidate = parseSwapReply(second.text, icebreaker)
+      if (candidate.reply) {
+        result = pickBetter(
+          result,
+          candidate,
+          extractAnchors(fixSource),
+          icebreaker ? 'icebreaker' : undefined
+        )
+      }
+    } catch {
+      // keep the first draw
     }
 
     if (icebreaker && openingIssue(result)) {
