@@ -30,16 +30,7 @@ const initialAccess: Access = {
 }
 
 function localizedPrice(): string {
-  if (typeof window === 'undefined') return '$6'
-  let currency = 'USD'
-  try {
-    currency =
-      Intl.NumberFormat(window.navigator.language).resolvedOptions().currency ||
-      'USD'
-  } catch {
-    currency = 'USD'
-  }
-  return currency === 'INR' ? '≈₹575' : '$6'
+  return '$15'
 }
 
 function getDeviceId(): string {
