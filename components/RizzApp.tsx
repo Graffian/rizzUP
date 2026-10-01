@@ -773,6 +773,81 @@ export default function RizzApp() {
           )}
         </section>
 
+        {/* seo content */}
+        <section className="animate-entrance animate-delay-6 mt-20 max-w-3xl">
+          <h2 className="font-head text-[26px] font-bold tracking-[-0.02em] text-paper sm:text-[34px]">
+            What is RizzUp?
+          </h2>
+          <p className="mt-3 text-[15px] leading-[1.7] text-muted">
+            RizzUp is the flirty reply generator that writes the{' '}
+            <em className="font-serifit font-normal italic text-paper">one</em>{' '}
+            line you&apos;d actually send. Paste a message you&apos;re stuck on, or drop
+            in a screenshot of the whole conversation, and get a smooth, specific
+            reply that keeps your side of the chat 100% yours. No pickup lines.
+            No cringe. No copy-paste energy.
+          </p>
+          <ol className="mt-6 grid gap-4 sm:grid-cols-3">
+            {[
+              [
+                'Start with context',
+                'Paste the message as it happened, or a screenshot for the full read — the game, the tease, the vibe.',
+              ],
+              [
+                'Get one strong line',
+                'RizzUp continues your conversation and lands the flirt. Hit replace till it feels exactly right.',
+              ],
+              [
+                'Keep it yours',
+                'Use each line as a starting point, make it sound like you, copy, and send.',
+              ],
+            ].map(([t, d]) => (
+              <li key={t} className="rounded-2xl border-2 border-line2/60 bg-panel/70 p-4">
+                <p className="font-body text-[11px] font-bold uppercase tracking-[0.08em] text-rust">
+                  {t}
+                </p>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-muted">{d}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-8 grid gap-3">
+            {[
+              [
+                'What is RizzUp?',
+                'RizzUp is an AI write-for-you app that turns any message or conversation screenshot into one confident, flirty reply. It reads the actual conversation and continues it — smooth, short, and specific to what was actually said.',
+              ],
+              [
+                'Is RizzUp free?',
+                'Yes — new users get free tries every day. After that it\u2019s a simple $15/month plan with unlimited replies, screenshot reading and replace — cancel anytime.',
+              ],
+              [
+                'Does RizzUp write pickup lines?',
+                'No. RizzUp is the opposite of cheesy copy-paste pickup lines. Every reply extends your real conversation and flirts on your behalf — in your voice, not a script.',
+              ],
+              [
+                'Which apps does it work with?',
+                'Anywhere you text — Instagram DMs and story replies, WhatsApp, iMessage, Snapchat, Telegram, Bumble, Hinge, Tinder. Screenshots are read in the moment and nothing is stored.',
+              ],
+              [
+                'How does the screenshot reply tool work?',
+                'A vision model reads the conversation, then RizzUp writes the next line — knowing which platform, who is flirting with whom, and the exact joke or tease in play. Photo details stay out of the reply.',
+              ],
+            ].map(([q, a]) => (
+              <details
+                key={q}
+                className="group rounded-2xl border-2 border-line2/60 bg-panel/70 px-4 py-3"
+              >
+                <summary className="flex cursor-pointer items-center justify-between gap-3 font-head text-[14px] font-bold tracking-[-0.01em] text-paper">
+                  {q}
+                  <span className="shrink-0 text-muted transition group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <p className="mt-2 text-[13px] leading-relaxed text-muted">{a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
         {/* footer */}
         <footer className="animate-entrance animate-delay-6 mt-20 flex flex-col items-start gap-3 border-t-2 border-line py-7 text-[11px] font-semibold tracking-[0.05em] text-faint sm:flex-row sm:items-center sm:justify-between">
           <span className="font-head text-[13px] font-bold tracking-[-0.01em] text-paper">

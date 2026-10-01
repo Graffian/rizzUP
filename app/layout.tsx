@@ -31,9 +31,92 @@ const mono = Space_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'RizzUp — reply like you mean it',
+  metadataBase: new URL('https://rizzup.antideploy.com'),
+  title: {
+    default: 'RizzUp — AI Flirty Reply Generator',
+    template: '%s · RizzUp',
+  },
   description:
-    'Paste the message. Get a handful of smooth, specific replies — no pickup lines, no cringe.',
+    'Paste any message or a screenshot of the conversation. RizzUp writes the one reply worth sending — smooth, specific, zero pickup lines, zero cringe.',
+  applicationName: 'RizzUp',
+  authors: [{ name: 'RizzUp' }],
+  creator: 'RizzUp',
+  publisher: 'RizzUp',
+  category: 'AI writing assistant',
+  keywords: [
+    'rizzup',
+    'flirty reply generator',
+    'what to text a girl',
+    'rizz text generator',
+    'how to reply on instagram',
+    'reply ideas for dm',
+    'pickup lines',
+    'texting ideas',
+  ],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
+  alternates: {
+    canonical: 'https://rizzup.antideploy.com',
+  },
+  icons: {
+    icon: '/rizzup-wordmark-256h.png',
+    apple: '/rizzup-wordmark-512h.png',
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://rizzup.antideploy.com',
+    siteName: 'RizzUp',
+    title: 'RizzUp — AI Flirty Reply Generator',
+    description:
+      'Paste any message or a screenshot of the conversation. RizzUp writes the one reply worth sending — smooth, specific, zero pickup lines, zero cringe.',
+    locale: 'en_US',
+    images: [
+      {
+        url: 'https://rizzup.antideploy.com/rizzup-wordmark-512h.png',
+        width: 512,
+        height: 512,
+        alt: 'RizzUp',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'RizzUp — AI Flirty Reply Generator',
+    description:
+      'Paste any message or a screenshot of the conversation. RizzUp writes the one reply worth sending — smooth, specific, zero pickup lines, zero cringe.',
+    images: ['https://rizzup.antideploy.com/rizzup-wordmark-512h.png'],
+  },
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      name: 'RizzUp',
+      url: 'https://rizzup.antideploy.com',
+      description:
+        'Paste any message or a screenshot of the conversation. RizzUp writes the one reply worth sending.',
+      inLanguage: 'en',
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: 'RizzUp',
+      url: 'https://rizzup.antideploy.com',
+      applicationCategory: 'UtilityApplication',
+      operatingSystem: 'Web',
+      offers: {
+        '@type': 'Offer',
+        price: '15',
+        priceCurrency: 'USD',
+      },
+      description:
+        'AI reply generator — paste a message or screenshot and get the one flirty reply worth sending.',
+    },
+  ],
 }
 
 export default function RootLayout({
@@ -55,6 +138,10 @@ export default function RootLayout({
       <body
         className={`${head.variable} ${body.variable} ${serif.variable} ${mono.variable}`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {children}
       </body>
     </html>
