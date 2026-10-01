@@ -140,6 +140,7 @@ export default function RizzApp() {
   const [replies, setReplies] = useState<Reply[] | null>(null)
   const [meta, setMeta] = useState('')
   const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null)
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [access, setAccess] = useState<Access>(initialAccess)
   const [unlock, setUnlock] = useState<{ open: boolean; processing: boolean }>({
     open: false,
@@ -774,11 +775,11 @@ export default function RizzApp() {
         </section>
 
         {/* seo content */}
-        <section className="animate-entrance animate-delay-6 mt-20 max-w-3xl">
+        <section className="animate-entrance animate-delay-6 mt-16 max-w-3xl sm:mt-20">
           <h2 className="font-head text-[26px] font-bold tracking-[-0.02em] text-paper sm:text-[34px]">
             What is RizzUp?
           </h2>
-          <p className="mt-3 text-[15px] leading-[1.7] text-muted">
+          <p className="mt-3 text-[14px] leading-[1.65] text-muted sm:text-[15px] sm:leading-[1.7]">
             RizzUp is the flirty reply generator that writes the{' '}
             <em className="font-serifit font-normal italic text-paper">one</em>{' '}
             line you&apos;d actually send. Paste a message you&apos;re stuck on, or drop
@@ -817,7 +818,7 @@ export default function RizzApp() {
               ],
               [
                 'Is RizzUp free?',
-                'Yes — new users get free tries every day. After that it\u2019s a simple $15/month plan with unlimited replies, screenshot reading and replace — cancel anytime.',
+                'Yes — a few free tries to start. After that it\u2019s a simple $15/month plan with unlimited replies, screenshot reading and replace — cancel anytime.',
               ],
               [
                 'Does RizzUp write pickup lines?',
@@ -831,25 +832,42 @@ export default function RizzApp() {
                 'How does the screenshot reply tool work?',
                 'A vision model reads the conversation, then RizzUp writes the next line — knowing which platform, who is flirting with whom, and the exact joke or tease in play. Photo details stay out of the reply.',
               ],
-            ].map(([q, a]) => (
-              <details
+            ].map(([q, a], i) => (
+              <div
                 key={q}
-                className="group rounded-2xl border-2 border-line2/60 bg-panel/70 px-4 py-3"
+                className="rounded-2xl border-2 border-line2/60 bg-panel/70 px-4 py-3"
               >
-                <summary className="flex cursor-pointer items-center justify-between gap-3 font-head text-[14px] font-bold tracking-[-0.01em] text-paper">
-                  {q}
-                  <span className="shrink-0 text-muted transition group-open:rotate-45">
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  aria-expanded={openFaq === i}
+                  className="flex w-full cursor-pointer items-center justify-between gap-3 text-left"
+                >
+                  <span className="font-head text-[13px] font-bold leading-snug tracking-[-0.01em] text-paper sm:text-[14px]">
+                    {q}
+                  </span>
+                  <span
+                    className={`shrink-0 text-muted transition ${
+                      openFaq === i ? 'rotate-45' : ''
+                    }`}
+                  >
                     +
                   </span>
-                </summary>
-                <p className="mt-2 text-[13px] leading-relaxed text-muted">{a}</p>
-              </details>
+                </button>
+                <p
+                  className={`mt-2 text-[13px] leading-relaxed text-muted ${
+                    openFaq === i ? '' : 'hidden'
+                  }`}
+                >
+                  {a}
+                </p>
+              </div>
             ))}
           </div>
         </section>
 
         {/* footer */}
-        <footer className="animate-entrance animate-delay-6 mt-20 flex flex-col items-start gap-3 border-t-2 border-line py-7 text-[11px] font-semibold tracking-[0.05em] text-faint sm:flex-row sm:items-center sm:justify-between">
+        <footer className="animate-entrance animate-delay-6 mt-16 flex flex-col items-start gap-3 border-t-2 border-line py-7 text-[11px] font-semibold tracking-[0.05em] text-faint sm:mt-20 sm:flex-row sm:items-center sm:justify-between">
           <span className="font-head text-[13px] font-bold tracking-[-0.01em] text-paper">
             rizzup 2026
           </span>
