@@ -26,7 +26,7 @@ const initialAccess: Access = {
   canUse: true,
   active: true,
   trialUsed: 0,
-  trialLimit: 3,
+  trialLimit: 1,
 }
 
 function localizedPrice(): string {
@@ -184,7 +184,7 @@ export default function RizzApp() {
         canUse: d.canUse !== false,
         active: d.active === true,
         trialUsed: d.trialUsed ?? 0,
-        trialLimit: d.trialLimit ?? 3,
+        trialLimit: d.trialLimit ?? 1,
       })
       return d.active === true
     } catch {
@@ -818,7 +818,7 @@ export default function RizzApp() {
               ],
               [
                 'Is RizzUp free?',
-                'Yes — a few free tries to start. After that it\u2019s a simple $15/month plan with unlimited replies, screenshot reading and replace — cancel anytime.',
+                'Yes — one free try to start. After that it\u2019s a simple $15/month plan with unlimited replies, screenshot reading and replace — cancel anytime.',
               ],
               [
                 'Does RizzUp write pickup lines?',

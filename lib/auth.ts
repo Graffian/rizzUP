@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from './supabase'
 
-export const TRIAL_LIMIT = 3
+export const TRIAL_LIMIT = 1
 
 export type AccessInfo = { active: boolean; trialUsed: number }
 

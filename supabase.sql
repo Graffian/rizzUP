@@ -60,7 +60,7 @@ begin
   update users
   set trial_used = trial_used + 1
   where device_id = p_device_id
-    and trial_used < 3;
+    and trial_used < 1;
 
   return (select trial_used from users where device_id = p_device_id);
 end;
